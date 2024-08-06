@@ -12,17 +12,14 @@ pub fn about_tab_ui(ui_root: &mut egui::Ui) {
     ui_root.add_space(computed_upper_center);
     ui_root.vertical_centered_justified(|ui_vertical_centered| {
         ui_vertical_centered.add(egui::Label::new(
-            egui::RichText::new(format!("Dashboard v{}", *DASHBOARD_VERSION)).size(30.0),
+            egui::RichText::new(format!("Duplicate File Finder v{}", *DASHBOARD_VERSION))
+                .size(30.0),
         ));
-        ui_vertical_centered.label("Dashboard template for modern cross platform applications");
+        ui_vertical_centered.label("Search for duplicate files");
 
         ui_vertical_centered.hyperlink_to(
             "Check out the code on GitHub",
-            "https://github.com/thebashpotato/egui-dashboard-template",
-        );
-        ui_vertical_centered.hyperlink_to(
-            "Latest release",
-            "https://github.com/thebashpotato/egui-dashboard-template/releases",
+            "https://github.com/ljoeckel/egui-dashboard-duplicate-file-finder.git",
         );
     });
 }

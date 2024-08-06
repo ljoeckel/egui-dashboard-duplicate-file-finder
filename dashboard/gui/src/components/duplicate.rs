@@ -56,6 +56,7 @@ impl Default for DuplicateScannerUI {
 
 impl DuplicateScannerUI {
     pub fn new(cc: &eframe::CreationContext<'_>) -> Self {
+        egui_extras::install_image_loaders(&&cc.egui_ctx);
         setup_custom_fonts(&cc.egui_ctx);
 
         Self {
@@ -115,10 +116,7 @@ pub fn duplicate_ui(
             .labelled_by(name_label.id);
 
         if ui
-            .add(egui::Button::image_and_text(
-                egui::include_image!("../assets/files.svg"),
-                "Select Directory",
-            ))
+            .add(egui::Button::new("\u{e613} Select Directory"))
             .clicked()
         {
             dss.file_dialog.select_directory();

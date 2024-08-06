@@ -34,5 +34,15 @@ pub fn settings_ui(
                         }
                     }
                 });
+
+            sa.add_space(20.0);
+            sa.heading("egui Settings");
+            sa.checkbox(&mut state.settings_window_open, "\u{1F527} egui-Settings");
+            egui::Window::new("\u{1F527} egui-Settings")
+                .open(&mut state.settings_window_open)
+                .vscroll(true)
+                .show(&ctx, |ui| {
+                    ctx.settings_ui(ui);
+                });
         });
 }

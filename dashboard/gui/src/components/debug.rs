@@ -1,4 +1,4 @@
-//! Settings Tab
+//! Debug Tab
 
 use crate::app::ApplicationState;
 use eframe::egui;
@@ -11,18 +11,10 @@ pub fn debug_ui(ui_root: &mut egui::Ui, state: &mut ApplicationState) {
         .id_source("settings_tab_scroll_area")
         .show(ui_root, |sa| {
             sa.horizontal(|ui| {
-                ui.checkbox(&mut state.settings_window_open, "\u{1F527} Settings");
                 ui.checkbox(&mut state.inspector_window_open, "\u{1F50D} Inspection");
                 ui.checkbox(&mut state.memory_window_open, "\u{1F4DD} Memory");
             });
             sa.add_space(20.0);
-
-            egui::Window::new("\u{1F527} Settings")
-                .open(&mut state.settings_window_open)
-                .vscroll(true)
-                .show(&ctx, |ui| {
-                    ctx.settings_ui(ui);
-                });
 
             egui::Window::new("\u{1F50D} Inspection")
                 .open(&mut state.inspector_window_open)
