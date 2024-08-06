@@ -1,0 +1,17 @@
+[workspace]
+members = ["dashboard/gui", "dashboard/common"]
+resolver = "2"
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.76"
+homepage = "https://github.com/ljoeckel/egui-dashboard-duplicate-file-finder.git"
+repository = "https://github.com/ljoeckel/egui-dashboard-duplicate-file-finder.git"
+description = "DuplicateFileFinder as Rust learning Project."
+authors = ["lothar.joeckel@gmail.com"]
+license = "MIT"
+
+[workspace.dependencies]
+dashboard_gui = { path = "dashboard/gui" }
+dashboard_common = { path = "dashboard/common" }

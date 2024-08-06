@@ -1,0 +1,29 @@
+[package]
+name = "dashboard_gui"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+homepage.workspace = true
+repository.workspace = true
+authors.workspace = true
+description.workspace = true
+license.workspace = true
+
+[dependencies]
+dashboard_common.workspace = true
+#eframe = { version = "0.28", default-features = false, features = [
+#    "glow",
+#    "default_fonts",
+#] }
+
+eframe = "0.28"
+env_logger = "0.11"
+#egui-aesthetix = { version = "0.2", features = ["all_themes"] }
+egui-aesthetix = { path = "../../../egui-aesthetix", features = ["all_themes"] }
+
+egui-file-dialog = "0.6"
+walkdir = "2"
+
+[[bin]]
+name = "dashboard_gui"
+path = "src/bin/main.rs"
