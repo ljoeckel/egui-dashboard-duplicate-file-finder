@@ -1,7 +1,5 @@
 use crate::app::ApplicationState;
 use eframe::egui;
-use egui_aesthetix::Aesthetix;
-use std::rc::Rc;
 
 use crate::scanner::mediatype::{Control, MediaMap, ScanType};
 
@@ -19,19 +17,16 @@ use std::{
 
 use eframe::egui::{Color32, Label, RichText, ScrollArea, TextStyle};
 use egui::scroll_area::ScrollBarVisibility;
-use egui::Visuals;
 use egui::{epaint::text::TextWrapMode, Ui};
 use egui_file_dialog::FileDialog;
-use std::fmt;
 
-#[derive(PartialEq, Debug)]
+#[derive(PartialEq)]
 enum ShowView {
     Scanned,
     Errors,
     Duplicates,
 }
 
-//#[derive(Debug)]
 pub struct DuplicateScannerUI {
     view: ShowView,
     path: String,
@@ -56,7 +51,8 @@ impl Default for DuplicateScannerUI {
 
 impl DuplicateScannerUI {
     pub fn new(cc: &eframe::CreationContext<'_>) -> Self {
-        egui_extras::install_image_loaders(&&cc.egui_ctx);
+        // Light-Theme default, Zoom 115%
+        cc.egui_ctx.set_zoom_factor(1.15);
         setup_custom_fonts(&cc.egui_ctx);
 
         Self {
@@ -67,6 +63,13 @@ impl DuplicateScannerUI {
     fn clear(&mut self) {
         self.messenger.clear();
         self.scanning = false;
+    }
+
+    fn is_scanning(&self) -> bool {
+        match self.handle.as_ref() {
+            Some(handle) => return !handle.is_finished(),
+            None => false,
+        }
     }
 
     fn color(&self, ui: &Ui) -> (MutexGuard<Vec<String>>, Color32) {
@@ -104,9 +107,10 @@ pub fn duplicate_ui(
     ui: &mut egui::Ui,
     ctx: &egui::Context,
     state: &mut ApplicationState,
-    themes: &[Rc<dyn Aesthetix>],
     dss: &mut DuplicateScannerUI,
 ) {
+    let is_scanning = dss.is_scanning();
+
     ui.add_space(30.0);
 
     // Path and FileDialog
@@ -116,7 +120,7 @@ pub fn duplicate_ui(
             .labelled_by(name_label.id);
 
         if ui
-            .add(egui::Button::new("\u{e613} Select Directory"))
+            .add_enabled(!is_scanning, egui::Button::new("\u{e613} Select Directory"))
             .clicked()
         {
             dss.file_dialog.select_directory();
@@ -138,7 +142,7 @@ pub fn duplicate_ui(
     // Scan / Abort Buttons
     ui.horizontal(|ui| {
         if ui
-            .add_enabled(!dss.scanning, egui::Button::new("Start Scan"))
+            .add_enabled(!is_scanning, egui::Button::new("Start Scan"))
             .clicked()
         {
             dss.clear();
@@ -148,16 +152,10 @@ pub fn duplicate_ui(
             dss.handle = Some(thread::spawn(move || {
                 scan(Path::new(&path), ScanType::BINARY, messenger);
             }));
-            dss.scanning = true;
-        }
-
-        // Use self.scanning to control reqest_repaint by waiting for the thread
-        if dss.scanning && dss.handle.as_ref().unwrap().is_finished() {
-            dss.scanning = false;
         }
 
         if ui
-            .add_enabled(dss.scanning, egui::Button::new("Abort"))
+            .add_enabled(is_scanning, egui::Button::new("Abort"))
             .clicked()
         {
             *dss.messenger.scanner_control.lock().unwrap() = Control::STOP;
@@ -207,13 +205,13 @@ pub fn duplicate_ui(
             let msg = stack.get(row).unwrap();
             let rt = RichText::new(msg).color(color);
             ui.add(Label::new(rt).wrap_mode(TextWrapMode::Extend));
-            if dss.scanning && !ctx.has_requested_repaint() {
+            if is_scanning && !ctx.has_requested_repaint() {
                 ctx.request_repaint();
             }
         }
     });
 
-    if dss.scanning && !ctx.has_requested_repaint() {
+    if is_scanning && !ctx.has_requested_repaint() {
         ctx.request_repaint_after(Duration::from_millis(100));
     }
 }

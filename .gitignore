@@ -1,1 +1,3 @@
 target
+dashboard/gui/.cargo_runner.toml
+duplicates.log

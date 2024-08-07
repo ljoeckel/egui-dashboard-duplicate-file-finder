@@ -8,8 +8,8 @@ fn main() -> Result<(), eframe::Error> {
     env_logger::init(); // Log to stderr (if you run with `RUST_LOG=debug`).
 
     let viewport = egui::ViewportBuilder::default()
-        .with_title("Dashboard Template")
-        .with_min_inner_size([1000.0, 435.0]);
+        .with_title("Duplicate File Finder")
+        .with_min_inner_size([1200.0, 800.0]);
 
     eframe::run_native(
         &format!("Dashboard v{}", *DASHBOARD_VERSION),

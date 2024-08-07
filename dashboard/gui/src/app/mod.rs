@@ -4,6 +4,7 @@ mod state;
 use crate::components;
 use crate::components::notifications::NotificationBar;
 use eframe::egui;
+use eframe::egui::Shadow;
 use egui_aesthetix::{
     themes::{
         CarlDark, NordDark, NordLight, StandardDark, StandardLight, TokyoNight, TokyoNightStorm,
@@ -11,8 +12,8 @@ use egui_aesthetix::{
     Aesthetix,
 };
 pub use state::{ApplicationState, Tab};
-use std::collections::BTreeMap;
-use std::rc::Rc;
+use std::{borrow::BorrowMut, collections::BTreeMap};
+use std::{ops::Deref, rc::Rc};
 
 use crate::components::duplicate::DuplicateScannerUI;
 
@@ -61,7 +62,7 @@ impl Dashboard {
         Self {
             state,
             tab_labels: [
-                (Tab::Home, "🏠  Home"),
+                (Tab::Home, "🏠  DuplicateFinder"),
                 (Tab::Settings, "⚙  Settings"),
                 (Tab::Logs, "📝  Logs"),
                 (Tab::Debug, "🐞  Debug"),
@@ -145,7 +146,6 @@ impl eframe::App for Dashboard {
                             ui_central_panel,
                             context,
                             &mut self.state,
-                            &self.themes,
                             &mut self.duplicate_scanner_state,
                         );
                     }
