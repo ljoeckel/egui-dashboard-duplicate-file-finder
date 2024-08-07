@@ -19,8 +19,8 @@ dashboard_common.workspace = true
 eframe = "0.28"
 egui_extras = "0.28"
 env_logger = "0.11"
-#egui-aesthetix = { version = "0.2", features = ["all_themes"] }
-egui-aesthetix = { path = "../../../egui-aesthetix", features = ["all_themes"] }
+egui-aesthetix-lj = { version = "0.2", features = ["all_themes"] }
+#egui-aesthetix = { path = "../../../egui-aesthetix", features = ["all_themes"] }
 
 egui-file-dialog = "0.6"
 walkdir = "2"

@@ -894,7 +894,7 @@ version = "0.1.0"
 dependencies = [
  "dashboard_common",
  "eframe",
- "egui-aesthetix",
+ "egui-aesthetix-lj",
  "egui-file-dialog",
  "egui_extras",
  "env_logger",
@@ -1035,8 +1035,10 @@ dependencies = [
 ]
 
 [[package]]
-name = "egui-aesthetix"
-version = "0.2.3"
+name = "egui-aesthetix-lj"
+version = "0.2.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "988e0e39efafc1d2bbec6ff9819bf9eaf0dd9f3cc5665edaf86c94d42cfcf879"
 dependencies = [
  "egui",
 ]
