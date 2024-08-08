@@ -34,8 +34,16 @@ pub fn settings_ui(
                         }
                     }
                 });
+            sa.add_space(10.0);
 
-            sa.add_space(20.0);
+            // Zoom-Factor
+            sa.heading("Zoom factor");
+            let slider = egui::Slider::new(&mut state.zoom_factor, 0.4..=2.0).step_by(0.10);
+            if sa.add(slider).drag_stopped() {
+                ctx.set_zoom_factor(state.zoom_factor);
+            }
+            sa.add_space(10.0);
+
             sa.heading("egui Settings");
             sa.checkbox(&mut state.settings_window_open, "\u{1F527} egui-Settings");
             egui::Window::new("\u{1F527} egui-Settings")

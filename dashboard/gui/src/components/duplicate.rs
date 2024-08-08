@@ -51,8 +51,6 @@ impl Default for DuplicateScannerUI {
 
 impl DuplicateScannerUI {
     pub fn new(cc: &eframe::CreationContext<'_>) -> Self {
-        // Light-Theme default, Zoom 115%
-        cc.egui_ctx.set_zoom_factor(1.15);
         setup_custom_fonts(&cc.egui_ctx);
 
         Self {

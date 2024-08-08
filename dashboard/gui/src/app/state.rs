@@ -29,6 +29,7 @@ pub struct ApplicationState {
     pub settings_window_open: bool,
     pub inspector_window_open: bool,
     pub memory_window_open: bool,
+    pub zoom_factor: f32,
 }
 
 impl ApplicationState {
@@ -41,6 +42,7 @@ impl ApplicationState {
             settings_window_open: false,
             inspector_window_open: false,
             memory_window_open: false,
+            zoom_factor: 1.0,
         }
     }
 }

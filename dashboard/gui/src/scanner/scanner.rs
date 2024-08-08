@@ -1,17 +1,16 @@
 use crate::scanner::mediatype::{ScanType, IGNORE_EXT, SUPPORTED_EXT};
 use crate::scanner::messenger::Messenger;
 
-use std::collections::{HashMap, HashSet};
-use std::fs::File;
-use std::io::{BufReader, Read, Write};
-use std::path::Path;
+use std::{
+    collections::{HashMap, HashSet},
+    fs::File,
+    io::{BufReader, Read, Write},
+    path::Path,
+};
 use walkdir::{DirEntry, WalkDir};
-
-use super::messenger;
 
 const BUF_SIZE: usize = 256;
 const SCRIPT_NAME: &str = "./duplicates.log";
-const EMPTY_STR: &str = "";
 
 pub fn scan(path: &Path, scan_type: ScanType, messenger: Messenger) {
     if !path.is_dir() {
