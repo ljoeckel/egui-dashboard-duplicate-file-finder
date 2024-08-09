@@ -52,7 +52,6 @@ impl Default for DuplicateScannerUI {
 impl DuplicateScannerUI {
     pub fn new(cc: &eframe::CreationContext<'_>) -> Self {
         setup_custom_fonts(&cc.egui_ctx);
-
         Self {
             ..Default::default()
         }

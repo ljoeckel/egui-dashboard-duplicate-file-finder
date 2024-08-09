@@ -4,7 +4,6 @@ mod state;
 use crate::components;
 use crate::components::notifications::NotificationBar;
 use eframe::egui;
-use eframe::egui::Shadow;
 use egui_aesthetix::{
     themes::{
         CarlDark, NordDark, NordLight, StandardDark, StandardLight, TokyoNight, TokyoNightStorm,
@@ -12,10 +11,11 @@ use egui_aesthetix::{
     Aesthetix,
 };
 pub use state::{ApplicationState, Tab};
-use std::{borrow::BorrowMut, collections::BTreeMap};
-use std::{ops::Deref, rc::Rc};
+use std::collections::BTreeMap;
+use std::rc::Rc;
 
 use crate::components::duplicate::DuplicateScannerUI;
+use crate::components::settings::SettingsUI;
 
 /// Holds application state and implements the business logic.
 //#[derive(Debug)]
@@ -29,6 +29,7 @@ pub struct Dashboard {
     /// Notifications bar
     notification_bar: NotificationBar,
     duplicate_scanner_state: DuplicateScannerUI,
+    settings_state: SettingsUI,
 }
 
 impl Dashboard {
@@ -73,6 +74,7 @@ impl Dashboard {
             themes,
             notification_bar: NotificationBar::new(),
             duplicate_scanner_state: DuplicateScannerUI::new(&cc),
+            settings_state: SettingsUI::new(),
         }
     }
 }
@@ -152,7 +154,8 @@ impl eframe::App for Dashboard {
 
                     Tab::Settings => {
                         // Load the Settings page
-                        components::settings::settings_ui(
+                        components::settings::SettingsUI::settings_ui(
+                            &mut self.settings_state,
                             ui_central_panel,
                             &mut self.state,
                             &self.themes,
