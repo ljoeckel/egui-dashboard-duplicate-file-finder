@@ -143,11 +143,10 @@ impl eframe::App for Dashboard {
 
                 match self.state.active_tab {
                     Tab::Home => {
-                        // Load the Home page
+                        // Load the DuplicateScanner page
                         components::duplicate::duplicate_ui(
                             ui_central_panel,
                             context,
-                            &mut self.state,
                             &mut self.duplicate_scanner_state,
                         );
                     }

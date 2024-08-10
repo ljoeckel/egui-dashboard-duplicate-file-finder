@@ -92,10 +92,9 @@ impl SettingsUI {
             .striped(true)
             .resizable(false)
             .cell_layout(egui::Layout::left_to_right(egui::Align::Center))
-            .column(Column::auto())
-            .column(Column::auto())
-            .column(Column::remainder())
-            .column(Column::remainder())
+            .column(Column::exact(80.0))
+            .column(Column::exact(80.0))
+            .column(Column::exact(80.0))
             .min_scrolled_height(0.0)
             .max_scroll_height(available_height);
 

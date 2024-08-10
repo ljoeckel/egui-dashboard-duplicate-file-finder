@@ -1,7 +1,7 @@
 use crate::app::ApplicationState;
 use eframe::egui;
 
-use crate::scanner::mediatype::{Control, MediaMap, ScanType};
+use crate::scanner::mediatype::{Control, ScanType};
 
 //mod messenger;
 use crate::scanner::font::setup_custom_fonts;
@@ -100,12 +100,7 @@ impl DuplicateScannerUI {
 }
 
 /// Renders the duplicate fild finder page
-pub fn duplicate_ui(
-    ui: &mut egui::Ui,
-    ctx: &egui::Context,
-    state: &mut ApplicationState,
-    dss: &mut DuplicateScannerUI,
-) {
+pub fn duplicate_ui(ui: &mut egui::Ui, ctx: &egui::Context, dss: &mut DuplicateScannerUI) {
     let is_scanning = dss.is_scanning();
 
     ui.add_space(30.0);
