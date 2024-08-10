@@ -1,4 +1,3 @@
-use crate::app::ApplicationState;
 use eframe::egui;
 
 use crate::scanner::mediatype::{Control, ScanType};

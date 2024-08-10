@@ -2,7 +2,7 @@
 
 use crate::{app::ApplicationState, scanner::mediatype::MediaMap};
 
-use eframe::egui::{self, Sense};
+use eframe::egui::{self};
 use egui_aesthetix::Aesthetix;
 use egui_extras::{Column, TableBuilder};
 

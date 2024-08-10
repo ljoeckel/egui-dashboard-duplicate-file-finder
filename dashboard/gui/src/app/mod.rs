@@ -51,7 +51,13 @@ impl Dashboard {
         ];
 
         let active_theme: Rc<dyn Aesthetix> = match themes.first() {
-            Some(theme) => Rc::clone(theme),
+            Some(_) => {
+                if cc.egui_ctx.style().visuals.dark_mode {
+                    Rc::new(StandardDark)
+                } else {
+                    Rc::new(StandardLight)
+                }
+            }
             None => Rc::new(StandardDark),
         };
 
