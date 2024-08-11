@@ -9,7 +9,7 @@ fn main() -> Result<(), eframe::Error> {
 
     let viewport = egui::ViewportBuilder::default()
         .with_title("Duplicate File Finder")
-        .with_min_inner_size([1200.0, 800.0]);
+        .with_min_inner_size([1000.0, 700.0]);
 
     eframe::run_native(
         &format!("Dashboard v{}", *DASHBOARD_VERSION),

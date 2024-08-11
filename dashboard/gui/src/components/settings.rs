@@ -1,31 +1,17 @@
 //! Settings Tab
-
-use crate::{app::ApplicationState, scanner::mediatype::MediaMap};
-
+use crate::{app::ApplicationState, scanner::mediatype::MediaType};
 use eframe::egui::{self};
 use egui_aesthetix::Aesthetix;
 use egui_extras::{Column, TableBuilder};
-
 use std::rc::Rc;
 
 pub struct SettingsUI {
-    media_map: MediaMap,
-    selected: Vec<bool>,
+    pub media_types: Vec<MediaType>,
 }
 impl SettingsUI {
     pub fn new() -> Self {
-        // Copy the selected boolean to the 'selected' vector
-        let media_map = MediaMap::load_maps();
-        let mut selected = Vec::new();
-        for (_, v) in media_map.clone().map.iter() {
-            for media_type in v.iter() {
-                selected.push(media_type.selected);
-            } // for
-        } // for group
-
         Self {
-            media_map,
-            selected,
+            media_types: MediaType::load_types(),
         }
     }
 
@@ -102,36 +88,32 @@ impl SettingsUI {
 
         let table = table.header(row_height * 2.0, |mut header| {
             header.col(|ui| {
-                ui.strong("Extension ");
+                ui.strong("Extension");
             });
             header.col(|ui| {
                 ui.strong("Enabled");
             });
             header.col(|ui| {
-                ui.strong("Type ");
+                ui.strong("Group");
             });
         });
 
         table.body(|mut body| {
-            let mut row_cnt = 0;
-            for media_group in self.media_map.map.keys() {
-                let mut media_types = self.media_map.map.get(media_group).unwrap().clone();
-                for media_type in media_types.iter_mut() {
-                    body.row(row_height, |mut row| {
-                        row.col(|ui| {
-                            ui.label(media_type.extension.clone())
-                                .on_hover_text(media_type.description.clone());
-                        });
-                        row.col(|ui| {
-                            ui.checkbox(&mut self.selected[row_cnt], "");
-                        });
-                        row.col(|ui| {
-                            ui.label(media_type.key.clone());
-                        });
-                    }); // body
-                    row_cnt += 1;
-                } // for types
-            } // for group
+            let media_types = &mut self.media_types; // Important to use boolean from struct as control for checkbox
+            for i in 0..media_types.len() {
+                body.row(row_height, |mut row| {
+                    row.col(|ui| {
+                        ui.label(media_types[i].extension.clone())
+                            .on_hover_text(media_types[i].description.clone());
+                    });
+                    row.col(|ui| {
+                        ui.checkbox(&mut media_types[i].selected, "");
+                    });
+                    row.col(|ui| {
+                        ui.label(media_types[i].group.clone());
+                    });
+                }); // body
+            } // for types
         });
     }
 }

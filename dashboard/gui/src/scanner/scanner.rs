@@ -1,3 +1,4 @@
+use crate::scanner::mediatype::MediaType;
 use crate::scanner::mediatype::{ScanType, IGNORE_EXT, SUPPORTED_EXT};
 use crate::scanner::messenger::Messenger;
 
@@ -12,14 +13,14 @@ use walkdir::{DirEntry, WalkDir};
 const BUF_SIZE: usize = 256;
 const SCRIPT_NAME: &str = "./duplicates.log";
 
-pub fn scan(path: &Path, scan_type: ScanType, messenger: Messenger) {
+pub fn scan(path: &Path, scan_type: ScanType, media_types: Vec<MediaType>, messenger: Messenger) {
     if !path.is_dir() {
         messenger.push_errlog(format!("{:?} must be a directory", path));
         return;
     }
 
     // 1. Walk recursivly down from the root_path and group files by size/type
-    let mut metas = walk_dir(&path, &scan_type, &messenger);
+    let mut metas = walk_dir(&path, &scan_type, &media_types, &messenger);
 
     // 2. Calculate file checksum from the first BUF_SIZE bytes from
     match scan_type {
@@ -50,6 +51,7 @@ pub fn scan(path: &Path, scan_type: ScanType, messenger: Messenger) {
 fn walk_dir(
     root_path: &Path,
     scan_type: &ScanType,
+    media_types: &Vec<MediaType>,
     messenger: &Messenger,
 ) -> HashMap<String, Vec<FileInfo>> {
     let mut number_of_files: usize = 0;
@@ -68,20 +70,27 @@ fn walk_dir(
         match entry.metadata() {
             Ok(metadata) => {
                 let file_info = FileInfo::new(entry.clone());
-                if !valid_extension(entry.path()) {
-                    messenger.push_errlog(file_info.path());
-                    continue;
+                let path = file_info.path();
+                let extension = get_extension(&file_info.path());
+                let mut found = false;
+                for i in 0..media_types.len() {
+                    if media_types[i].extension == extension && media_types[i].selected {
+                        let key = match scan_type {
+                            ScanType::BINARY => file_info.get_key(metadata.len()),
+                            ScanType::METADATA => String::new(), // file_info.lofty().unwrap_or("".to_string()),
+                        };
+                        number_of_files += 1;
+                        messenger.push_stdlog(file_info.path());
+                        messenger.cntmax(number_of_files);
+                        let entries = fileinfo_map.entry(key).or_insert(Vec::new());
+                        entries.push(file_info);
+                        found = true;
+                        break;
+                    }
                 }
-
-                let key = match scan_type {
-                    ScanType::BINARY => file_info.get_key(metadata.len()),
-                    ScanType::METADATA => String::new(), // file_info.lofty().unwrap_or("".to_string()),
-                };
-                number_of_files += 1;
-                messenger.push_stdlog(file_info.path());
-                messenger.cntmax(number_of_files);
-                let entries = fileinfo_map.entry(key).or_insert(Vec::new());
-                entries.push(file_info);
+                if !found {
+                    messenger.push_errlog(path);
+                }
             }
             Err(e) => {
                 messenger.push_errlog(format!("Error={}", e));

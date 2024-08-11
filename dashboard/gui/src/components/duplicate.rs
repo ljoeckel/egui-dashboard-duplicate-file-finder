@@ -1,9 +1,4 @@
-use eframe::egui;
-
-use crate::scanner::mediatype::{Control, ScanType};
-
-//mod messenger;
-use crate::scanner::font::setup_custom_fonts;
+use crate::scanner::mediatype::{Control, MediaType, ScanType};
 use crate::scanner::messenger::Messenger;
 use crate::scanner::scanner::scan;
 
@@ -14,6 +9,7 @@ use std::{
     time::Duration,
 };
 
+use eframe::egui;
 use eframe::egui::{Color32, Label, RichText, ScrollArea, TextStyle};
 use egui::scroll_area::ScrollBarVisibility;
 use egui::{epaint::text::TextWrapMode, Ui};
@@ -49,8 +45,7 @@ impl Default for DuplicateScannerUI {
 }
 
 impl DuplicateScannerUI {
-    pub fn new(cc: &eframe::CreationContext<'_>) -> Self {
-        setup_custom_fonts(&cc.egui_ctx);
+    pub fn new() -> Self {
         Self {
             ..Default::default()
         }
@@ -99,7 +94,12 @@ impl DuplicateScannerUI {
 }
 
 /// Renders the duplicate fild finder page
-pub fn duplicate_ui(ui: &mut egui::Ui, ctx: &egui::Context, dss: &mut DuplicateScannerUI) {
+pub fn duplicate_ui(
+    ui: &mut egui::Ui,
+    ctx: &egui::Context,
+    dss: &mut DuplicateScannerUI,
+    media_types: Vec<MediaType>,
+) {
     let is_scanning = dss.is_scanning();
 
     ui.add_space(30.0);
@@ -141,7 +141,7 @@ pub fn duplicate_ui(ui: &mut egui::Ui, ctx: &egui::Context, dss: &mut DuplicateS
             let path = dss.path.clone();
 
             dss.handle = Some(thread::spawn(move || {
-                scan(Path::new(&path), ScanType::BINARY, messenger);
+                scan(Path::new(&path), ScanType::BINARY, media_types, messenger);
             }));
         }
 

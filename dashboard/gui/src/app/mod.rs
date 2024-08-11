@@ -63,6 +63,10 @@ impl Dashboard {
 
         let state = ApplicationState::new(active_theme);
 
+        // Load the custom font
+        use crate::scanner::font::setup_custom_fonts;
+        setup_custom_fonts(&cc.egui_ctx);
+
         // Initialize the custom theme/styles for egui
         cc.egui_ctx.set_style(state.active_theme.custom_style());
 
@@ -79,7 +83,7 @@ impl Dashboard {
             .collect(),
             themes,
             notification_bar: NotificationBar::new(),
-            duplicate_scanner_state: DuplicateScannerUI::new(&cc),
+            duplicate_scanner_state: DuplicateScannerUI::new(),
             settings_state: SettingsUI::new(),
         }
     }
@@ -154,6 +158,7 @@ impl eframe::App for Dashboard {
                             ui_central_panel,
                             context,
                             &mut self.duplicate_scanner_state,
+                            self.settings_state.media_types.clone(),
                         );
                     }
 
