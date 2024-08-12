@@ -2,7 +2,6 @@
 use crate::{app::ApplicationState, scanner::mediatype::MediaType};
 use eframe::egui::{self, util::undoer::Settings};
 use egui_aesthetix::Aesthetix;
-use egui_dock::{DockArea, DockState, NodeIndex, Style};
 use egui_extras::{Column, TableBuilder};
 use std::rc::Rc;
 
