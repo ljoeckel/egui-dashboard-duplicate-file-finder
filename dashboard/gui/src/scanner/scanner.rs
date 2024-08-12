@@ -72,23 +72,25 @@ fn walk_dir(
                 let file_info = FileInfo::new(entry.clone());
                 let path = file_info.path();
                 let extension = get_extension(&file_info.path());
-                let mut found = false;
-                for i in 0..media_types.len() {
-                    if media_types[i].extension == extension && media_types[i].selected {
-                        let key = match scan_type {
-                            ScanType::BINARY => file_info.get_key(metadata.len()),
-                            ScanType::METADATA => String::new(), // file_info.lofty().unwrap_or("".to_string()),
-                        };
-                        number_of_files += 1;
-                        messenger.push_stdlog(file_info.path());
-                        messenger.cntmax(number_of_files);
-                        let entries = fileinfo_map.entry(key).or_insert(Vec::new());
-                        entries.push(file_info);
-                        found = true;
-                        break;
-                    }
-                }
-                if !found {
+
+                if media_types
+                    .iter()
+                    .any(|e| e.extension == extension && e.selected == true)
+                {
+                    let key = match scan_type {
+                        ScanType::BINARY => file_info.get_key(metadata.len()),
+                        ScanType::METADATA => String::new(), // TODO: Implement Metatdata compare
+                    };
+
+                    // update messenger
+                    number_of_files += 1;
+                    messenger.push_stdlog(file_info.path());
+                    messenger.cntmax(number_of_files);
+
+                    // fill into entries
+                    let entries = fileinfo_map.entry(key).or_insert(Vec::new());
+                    entries.push(file_info);
+                } else {
                     messenger.push_errlog(path);
                 }
             }
@@ -261,8 +263,8 @@ fn create_bash_script(
 
 pub fn get_extension(path: &str) -> String {
     let extension = match path.rfind('.') {
-        Some(idx) => format!("{}", &path[idx..].to_uppercase()),
-        None => format!("{}", ""),
+        Some(idx) => String::from(&path[idx..].to_uppercase()),
+        None => String::new(),
     };
     extension
 }

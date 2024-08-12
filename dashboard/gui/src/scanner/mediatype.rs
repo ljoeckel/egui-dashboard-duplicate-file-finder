@@ -30,27 +30,35 @@ impl MediaType {
     pub fn load_types() -> Vec<MediaType> {
         let mut media_types: Vec<MediaType> = Vec::new();
         audio_types(&mut media_types);
+        image_types(&mut media_types);
         video_types(&mut media_types);
+        document_types(&mut media_types);
         media_types
     }
 
-    pub fn is_selected(self, media_types: &Vec<MediaType>, extension: &str) -> bool {
-        for i in 0..media_types.len() {
-            if media_types[i].extension.eq(extension) {
-                return media_types[i].selected;
+    pub fn is_selected(
+        &mut self,
+        media_groups: &Vec<String>,
+        media_groups_checked: &Vec<bool>,
+    ) -> bool {
+        for i in 0..media_groups.len() {
+            if media_groups[i] == self.group && media_groups_checked[i] {
+                return true;
             }
         }
         false
     }
 
-    pub fn toggle_selected(&mut self) -> bool {
-        self.selected = !self.selected;
-        self.selected
+    pub fn group_names(media_types: &Vec<MediaType>) -> Vec<String> {
+        let mut uniques: Vec<String> = media_types.iter().map(|x| x.group.clone()).collect();
+        uniques.sort();
+        uniques.dedup();
+        uniques
     }
 }
 
 fn audio_types(media_types: &mut Vec<MediaType>) {
-    let group = "audio";
+    let group = "Audio";
 
     add_type(group, media_types, ".3gp", "MM container format can contain proprietary formats as AMR, AMR-WB or AMR-WB+, but also some open formats");
     add_type(group, media_types, ".8svx", "The IFF-8SVX format for 8-bit sound samples, created by Electronic Arts in 1984 at the birth of the Amiga");
@@ -139,11 +147,38 @@ fn audio_types(media_types: &mut Vec<MediaType>) {
     );
 }
 
+fn image_types(media_types: &mut Vec<MediaType>) {
+    let group = "Image";
+    add_type(group, media_types, ".png", "Portable Network Graphic");
+    add_type(group, media_types, ".jpg", "JPEG Image");
+    add_type(group, media_types, ".jpeg", "JPEG Image");
+    add_type(group, media_types, ".tiff", "Tagged Image Format");
+    add_type(group, media_types, ".bmp", "Bitmap Image");
+}
+
 fn video_types(media_types: &mut Vec<MediaType>) {
-    let group = "video";
+    let group = "Video";
     add_type(group, media_types, ".m4v", "Apple iTunes Video file");
     add_type(group, media_types, ".mp4", "MPEG4 Video");
     add_type(group, media_types, ".vob", "Multimedia container format can contain proprietary formats as AMR, AMR-WB or AMR-WB+, but also some open formats");
+}
+
+fn document_types(media_types: &mut Vec<MediaType>) {
+    let group = "Document";
+    add_type(
+        group,
+        media_types,
+        ".doc",
+        "Microsoft Word Document (Old format)",
+    );
+    add_type(group, media_types, ".docx", "Microsoft Word Document");
+    add_type(
+        group,
+        media_types,
+        ".pdf",
+        "Adobes multi-platform document format",
+    );
+    add_type(group, media_types, ".txt", "Plain text file");
 }
 
 fn add_type(key: &str, media_types: &mut Vec<MediaType>, extension: &str, description: &str) {
