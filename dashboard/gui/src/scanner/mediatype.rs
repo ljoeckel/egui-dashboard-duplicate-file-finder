@@ -12,14 +12,15 @@ pub enum Control {
 pub struct MediaGroup {
     pub name: String,
     pub selected: bool,
-    pub media_types: Vec<MediaType>,
+    //pub media_types: Vec<MediaType>,
 }
 impl MediaGroup {
-    fn new(name: &str, media_types: Vec<MediaType>) -> Self {
+    fn new(name: &str) -> Self {
+        //fn new(name: &str, media_types: Vec<MediaType>) -> Self {
         Self {
             name: name.to_owned(),
             selected: true,
-            media_types,
+            //media_types,
         }
     }
 }
