@@ -9,6 +9,21 @@ pub enum Control {
     INFO,
 }
 
+pub struct MediaGroup {
+    pub name: String,
+    pub selected: bool,
+    pub media_types: Vec<MediaType>,
+}
+impl MediaGroup {
+    fn new(name: &str, media_types: Vec<MediaType>) -> Self {
+        Self {
+            name: name.to_owned(),
+            selected: true,
+            media_types,
+        }
+    }
+}
+
 #[derive(Debug, Clone)]
 pub struct MediaType {
     pub group: String,
@@ -20,20 +35,38 @@ pub struct MediaType {
 impl MediaType {
     pub fn new(group: &str, extension: &str, description: &str) -> Self {
         Self {
-            group: String::from(group),
-            extension: String::from(extension).to_uppercase(),
-            description: String::from(description),
+            group: group.to_owned(),
+            extension: extension.to_uppercase().to_owned(),
+            description: description.to_owned(),
             selected: true,
         }
     }
 
     pub fn load_types() -> Vec<MediaType> {
         let mut media_types: Vec<MediaType> = Vec::new();
-        audio_types(&mut media_types);
-        image_types(&mut media_types);
-        video_types(&mut media_types);
-        document_types(&mut media_types);
+        audio_types("Audio", &mut media_types);
+        document_types("Document", &mut media_types);
+        image_types("Image", &mut media_types);
+        video_types("Video", &mut media_types);
         media_types
+    }
+
+    pub fn load_groups() -> Vec<MediaGroup> {
+        let mut media_groups: Vec<MediaGroup> = Vec::new();
+        media_groups.push(MediaGroup::new("Audio"));
+        media_groups.push(MediaGroup::new("Document"));
+        media_groups.push(MediaGroup::new("Image"));
+        media_groups.push(MediaGroup::new("Video"));
+        media_groups
+    }
+
+    pub fn is_group_selected(media_groups: &Vec<MediaGroup>, name: &str) -> bool {
+        for group in media_groups {
+            if group.name.eq(name) && group.selected {
+                return true;
+            }
+        }
+        false
     }
 
     pub fn is_selected(
@@ -57,9 +90,7 @@ impl MediaType {
     }
 }
 
-fn audio_types(media_types: &mut Vec<MediaType>) {
-    let group = "Audio";
-
+fn audio_types(group: &str, media_types: &mut Vec<MediaType>) {
     add_type(group, media_types, ".3gp", "MM container format can contain proprietary formats as AMR, AMR-WB or AMR-WB+, but also some open formats");
     add_type(group, media_types, ".8svx", "The IFF-8SVX format for 8-bit sound samples, created by Electronic Arts in 1984 at the birth of the Amiga");
     add_type(group, media_types, ".aa", "A low-bitrate audiobook container format with DRM, containing audio encoded as either MP3 or the ACELP speech codec");
@@ -147,8 +178,7 @@ fn audio_types(media_types: &mut Vec<MediaType>) {
     );
 }
 
-fn image_types(media_types: &mut Vec<MediaType>) {
-    let group = "Image";
+fn image_types(group: &str, media_types: &mut Vec<MediaType>) {
     add_type(group, media_types, ".png", "Portable Network Graphic");
     add_type(group, media_types, ".jpg", "JPEG Image");
     add_type(group, media_types, ".jpeg", "JPEG Image");
@@ -156,15 +186,13 @@ fn image_types(media_types: &mut Vec<MediaType>) {
     add_type(group, media_types, ".bmp", "Bitmap Image");
 }
 
-fn video_types(media_types: &mut Vec<MediaType>) {
-    let group = "Video";
+fn video_types(group: &str, media_types: &mut Vec<MediaType>) {
     add_type(group, media_types, ".m4v", "Apple iTunes Video file");
     add_type(group, media_types, ".mp4", "MPEG4 Video");
     add_type(group, media_types, ".vob", "Multimedia container format can contain proprietary formats as AMR, AMR-WB or AMR-WB+, but also some open formats");
 }
 
-fn document_types(media_types: &mut Vec<MediaType>) {
-    let group = "Document";
+fn document_types(group: &str, media_types: &mut Vec<MediaType>) {
     add_type(
         group,
         media_types,

@@ -31,7 +31,7 @@ impl Messenger {
         self.stdlog.lock().unwrap().clear();
         self.errlog.lock().unwrap().clear();
         self.reslog.lock().unwrap().clear();
-        *self.info.lock().unwrap() = String::from("");
+        *self.info.lock().unwrap() = "".to_owned();
         *self.cntmax.lock().unwrap() = 0;
         *self.cntcur.lock().unwrap() = 0;
     }

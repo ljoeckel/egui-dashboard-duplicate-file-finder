@@ -176,7 +176,7 @@ pub fn duplicate_ui(
 
     // Open FileDialog
     match dss.file_dialog.update(ctx).selected() {
-        Some(path) => dss.path = String::from(path.to_str().unwrap()),
+        Some(path) => dss.path = path.to_str().unwrap_or("").to_owned(),
         _ => (),
     }
     ui.separator();

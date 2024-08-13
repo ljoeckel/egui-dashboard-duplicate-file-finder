@@ -57,7 +57,7 @@ fn walk_dir(
     let mut number_of_files: usize = 0;
     let mut fileinfo_map: HashMap<String, Vec<FileInfo>> = HashMap::new();
 
-    messenger.info(String::from("Scanning..."));
+    messenger.info("Scanning...".to_owned());
 
     for entry in WalkDir::new(root_path)
         .into_iter()
@@ -117,7 +117,7 @@ fn calc_checksum(map: &mut HashMap<String, Vec<FileInfo>>, messenger: &Messenger
         }
 
         count += 1;
-        messenger.info(String::from("Calculate Checksums"));
+        messenger.info("Calculate Checksums".to_owned());
         messenger.cntmax(len);
         messenger.cntcur(count);
 
@@ -138,7 +138,7 @@ fn check_for_duplicates(
     let len = metas.len();
     let mut duplicates: Vec<String> = Vec::new();
 
-    messenger.info(String::from("Check for duplicates"));
+    messenger.info("Check for duplicates".to_owned());
     messenger.cntmax(len);
     messenger.cntcur(count);
 
@@ -263,7 +263,7 @@ fn create_bash_script(
 
 pub fn get_extension(path: &str) -> String {
     let extension = match path.rfind('.') {
-        Some(idx) => String::from(&path[idx..].to_uppercase()),
+        Some(idx) => (&path[idx..].to_uppercase()).to_owned(),
         None => String::new(),
     };
     extension
@@ -303,8 +303,8 @@ impl FileInfo {
     /// Returns the String representation of file's path
     pub fn path(&self) -> String {
         match self.dir_entry.path().to_str() {
-            Some(s) => return String::from(s),
-            None => return String::from(""),
+            Some(s) => return s.to_owned(),
+            None => return "".to_owned(),
         };
     }
 
