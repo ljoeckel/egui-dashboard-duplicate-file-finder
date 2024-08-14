@@ -69,6 +69,8 @@ impl Dashboard {
 
         // Initialize the custom theme/styles for egui
         cc.egui_ctx.set_style(state.active_theme.custom_style());
+        // Set zoom-factor
+        cc.egui_ctx.set_zoom_factor(state.zoom_factor);
 
         Self {
             state,
@@ -158,7 +160,7 @@ impl eframe::App for Dashboard {
                             ui_central_panel,
                             context,
                             &mut self.duplicate_scanner_state,
-                            self.settings_state.media_types.clone(),
+                            self.settings_state.media_groups.clone(),
                         );
                     }
 

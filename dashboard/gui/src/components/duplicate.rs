@@ -1,4 +1,4 @@
-use crate::scanner::mediatype::{Control, MediaType, ScanType};
+use crate::scanner::mediatype::{Control, MediaGroup, ScanType};
 use crate::scanner::messenger::Messenger;
 use crate::scanner::scanner::scan;
 
@@ -98,7 +98,7 @@ pub fn duplicate_ui(
     ui: &mut egui::Ui,
     ctx: &egui::Context,
     dss: &mut DuplicateScannerUI,
-    media_types: Vec<MediaType>,
+    media_groups: Vec<MediaGroup>,
 ) {
     let is_scanning = dss.is_scanning();
 
@@ -141,7 +141,7 @@ pub fn duplicate_ui(
             let path = dss.path.clone();
 
             dss.handle = Some(thread::spawn(move || {
-                scan(Path::new(&path), ScanType::BINARY, media_types, messenger);
+                scan(Path::new(&path), ScanType::BINARY, media_groups, messenger);
             }));
         }
 

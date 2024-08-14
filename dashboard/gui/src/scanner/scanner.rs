@@ -1,5 +1,4 @@
-use crate::scanner::mediatype::MediaType;
-use crate::scanner::mediatype::{ScanType, IGNORE_EXT, SUPPORTED_EXT};
+use crate::scanner::mediatype::{MediaGroup, ScanType, IGNORE_EXT};
 use crate::scanner::messenger::Messenger;
 
 use std::{
@@ -13,14 +12,14 @@ use walkdir::{DirEntry, WalkDir};
 const BUF_SIZE: usize = 256;
 const SCRIPT_NAME: &str = "./duplicates.log";
 
-pub fn scan(path: &Path, scan_type: ScanType, media_types: Vec<MediaType>, messenger: Messenger) {
+pub fn scan(path: &Path, scan_type: ScanType, media_groups: Vec<MediaGroup>, messenger: Messenger) {
     if !path.is_dir() {
         messenger.push_errlog(format!("{:?} must be a directory", path));
         return;
     }
 
     // 1. Walk recursivly down from the root_path and group files by size/type
-    let mut metas = walk_dir(&path, &scan_type, &media_types, &messenger);
+    let mut metas = walk_dir(&path, &scan_type, &media_groups, &messenger);
 
     // 2. Calculate file checksum from the first BUF_SIZE bytes from
     match scan_type {
@@ -33,14 +32,8 @@ pub fn scan(path: &Path, scan_type: ScanType, media_types: Vec<MediaType>, messe
 
     // 4. Print the duplicates to stdout
     match create_bash_script(&duplicates, &messenger) {
-        Ok(dups_written) => messenger.info(format!(
-            "{} duplicates written to file {}",
-            dups_written, SCRIPT_NAME
-        )),
-        Err(e) => messenger.push_errlog(format!(
-            "Could not write file {} due to error {}",
-            SCRIPT_NAME, e
-        )),
+        Ok(dups_written) => messenger.info(format!("{} duplicates written to file {}", dups_written, SCRIPT_NAME)),
+        Err(e) => messenger.push_errlog(format!("Could not write file {} due to error {}", SCRIPT_NAME, e)),
     }
 }
 
@@ -51,7 +44,7 @@ pub fn scan(path: &Path, scan_type: ScanType, media_types: Vec<MediaType>, messe
 fn walk_dir(
     root_path: &Path,
     scan_type: &ScanType,
-    media_types: &Vec<MediaType>,
+    media_groups: &Vec<MediaGroup>,
     messenger: &Messenger,
 ) -> HashMap<String, Vec<FileInfo>> {
     let mut number_of_files: usize = 0;
@@ -71,12 +64,11 @@ fn walk_dir(
             Ok(metadata) => {
                 let file_info = FileInfo::new(entry.clone());
                 let path = file_info.path();
-                let extension = get_extension(&file_info.path());
+                let extension = &get_extension(&file_info.path());
 
-                if media_types
+                if media_groups
                     .iter()
-                    .any(|e| e.extension == extension && e.selected == true)
-                {
+                    .any(|mg| mg.is_selected(extension)) {
                     let key = match scan_type {
                         ScanType::BINARY => file_info.get_key(metadata.len()),
                         ScanType::METADATA => String::new(), // TODO: Implement Metatdata compare
@@ -276,15 +268,6 @@ pub fn ignore_extension(path: &Path) -> bool {
         None => false,
     };
     ignore
-}
-
-pub fn valid_extension(path: &Path) -> bool {
-    let full_path = path.to_str().unwrap_or("");
-    let valid = match full_path.rfind('.') {
-        Some(idx) => SUPPORTED_EXT.contains(&full_path[idx..].to_uppercase()),
-        None => false,
-    };
-    valid
 }
 
 #[derive(Debug)]

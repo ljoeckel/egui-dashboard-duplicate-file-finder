@@ -9,15 +9,13 @@ use egui_extras::{Column, TableBuilder};
 use std::rc::Rc;
 
 pub struct SettingsUI {
-    pub media_types: Vec<MediaType>,
-    pub groups: Vec<MediaGroup>,
+    pub media_groups: Vec<MediaGroup>,
 }
 
 impl SettingsUI {
     pub fn new() -> Self {
         Self {
-            media_types: MediaType::load_types(),
-            groups: MediaType::load_groups(),
+            media_groups: MediaType::load_groups(),
         }
     }
 
@@ -74,16 +72,19 @@ impl SettingsUI {
         ui.add_space(20.0);
 
         ui.heading("Media-Types");
+
         // Media Groups select/deselect
         ui.horizontal(|ui| {
-            for i in 0..self.groups.len() {
-                let name = self.groups[i].name.clone();
-                if ui.checkbox(&mut self.groups[i].selected, &name).clicked() {
+            for i in 0..self.media_groups.len() {
+                let name = self.media_groups[i].name.clone();
+                if ui
+                    .checkbox(&mut self.media_groups[i].selected, &name)
+                    .clicked()
+                {
                     // Update the MediaType's of the group
-                    for j in 0..self.media_types.len() {
-                        if self.media_types[j].group.eq(&name) {
-                            self.media_types[j].selected = self.groups[i].selected;
-                        }
+                    for j in 0..self.media_groups[i].media_types.len() {
+                        self.media_groups[i].media_types[j].selected =
+                            self.media_groups[i].selected;
                     }
                 }
             }
@@ -95,7 +96,7 @@ impl SettingsUI {
             .size
             .max(ui.spacing().interact_size.y);
 
-        let mut table = TableBuilder::new(ui)
+        TableBuilder::new(ui)
             .striped(true)
             .resizable(false)
             .cell_layout(egui::Layout::left_to_right(egui::Align::Center))
@@ -103,40 +104,47 @@ impl SettingsUI {
             .column(Column::exact(80.0))
             .column(Column::exact(80.0))
             .min_scrolled_height(0.0)
-            .max_scroll_height(available_height);
-
-        table = table.sense(egui::Sense::click());
-
-        let table = table.header(row_height * 2.0, |mut header| {
-            header.col(|ui| {
-                ui.strong("Extension");
+            .max_scroll_height(available_height)
+            .sense(egui::Sense::click())
+            .header(row_height * 2.0, |mut header| {
+                header.col(|ui| {
+                    ui.strong("Extension");
+                });
+                header.col(|ui| {
+                    ui.strong("Enabled");
+                });
+                header.col(|ui| {
+                    ui.strong("Group");
+                });
+            })
+            .body(|mut body| {
+                for i in 0..self.media_groups.len() {
+                    for j in 0..self.media_groups[i].media_types.len() {
+                        if self.media_groups[i].selected
+                        //&& self.media_groups[i]
+                        //    .name
+                        //    .eq(self.media_groups[i].media_types[j].group.as_str())
+                        {
+                            body.row(row_height, |mut row| {
+                                row.col(|ui| {
+                                    ui.label(self.media_groups[i].media_types[j].extension.clone())
+                                        .on_hover_text(
+                                            self.media_groups[i].media_types[j].description.clone(),
+                                        );
+                                });
+                                row.col(|ui| {
+                                    ui.checkbox(
+                                        &mut self.media_groups[i].media_types[j].selected,
+                                        "",
+                                    );
+                                });
+                                row.col(|ui| {
+                                    ui.label(self.media_groups[i].name.clone());
+                                });
+                            }); // body
+                        } // if selcted
+                    } // for types
+                } // for group
             });
-            header.col(|ui| {
-                ui.strong("Enabled");
-            });
-            header.col(|ui| {
-                ui.strong("Group");
-            });
-        });
-
-        table.body(|mut body| {
-            let media_types = &mut self.media_types; // Important to use boolean from struct as control for checkbox
-            for i in 0..media_types.len() {
-                if MediaType::is_group_selected(&self.groups, media_types[i].group.as_str()) {
-                    body.row(row_height, |mut row| {
-                        row.col(|ui| {
-                            ui.label(media_types[i].extension.clone())
-                                .on_hover_text(media_types[i].description.clone());
-                        });
-                        row.col(|ui| {
-                            ui.checkbox(&mut media_types[i].selected, "");
-                        });
-                        row.col(|ui| {
-                            ui.label(media_types[i].group.clone());
-                        });
-                    }); // body
-                } // is_selected
-            } // for types
-        });
     }
 }
