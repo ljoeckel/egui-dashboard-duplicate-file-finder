@@ -9,8 +9,7 @@ pub struct Messenger {
     pub errlog: Arc<Mutex<Vec<String>>>,
     pub reslog: Arc<Mutex<Vec<String>>>,
     pub info: Arc<Mutex<String>>,
-    pub cntmax: Arc<Mutex<usize>>,
-    pub cntcur: Arc<Mutex<usize>>,
+    pub progress: Arc<Mutex<f32>>,
 }
 
 impl Messenger {
@@ -21,8 +20,7 @@ impl Messenger {
             errlog: Arc::new(Mutex::new(Vec::new())),
             reslog: Arc::new(Mutex::new(Vec::new())),
             info: Arc::new(Mutex::new(String::new())),
-            cntmax: Arc::new(Mutex::new(0)),
-            cntcur: Arc::new(Mutex::new(0)),
+            progress: Arc::new(Mutex::new(0.0)),
         }
     }
 
@@ -32,8 +30,7 @@ impl Messenger {
         self.errlog.lock().unwrap().clear();
         self.reslog.lock().unwrap().clear();
         *self.info.lock().unwrap() = "".to_owned();
-        *self.cntmax.lock().unwrap() = 0;
-        *self.cntcur.lock().unwrap() = 0;
+        *self.progress.lock().unwrap() = 0.0;
     }
 
     pub fn is_stopped(&self) -> bool {
@@ -71,11 +68,13 @@ impl Messenger {
         self.reslog.lock().unwrap().len()
     }
 
-    pub fn cntmax(&self, cntmax: usize) {
-        *self.cntmax.lock().unwrap() = cntmax;
+    pub fn set_progress(&self, max: usize, current: usize, info: &str) {
+        *self.progress.lock().unwrap() = current as f32 / max as f32;
+        if !info.is_empty() {
+            *self.info.lock().unwrap() = String::from(info);
+        }
     }
-
-    pub fn cntcur(&self, cntcur: usize) {
-        *self.cntcur.lock().unwrap() = cntcur;
+    pub fn progress(&self) -> f32 {
+        *self.progress.lock().unwrap()
     }
 }

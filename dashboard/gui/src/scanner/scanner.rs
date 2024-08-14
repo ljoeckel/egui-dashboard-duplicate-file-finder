@@ -47,7 +47,6 @@ fn walk_dir(
     media_groups: &Vec<MediaGroup>,
     messenger: &Messenger,
 ) -> HashMap<String, Vec<FileInfo>> {
-    let mut number_of_files: usize = 0;
     let mut fileinfo_map: HashMap<String, Vec<FileInfo>> = HashMap::new();
 
     messenger.info("Scanning...".to_owned());
@@ -75,9 +74,7 @@ fn walk_dir(
                     };
 
                     // update messenger
-                    number_of_files += 1;
                     messenger.push_stdlog(file_info.path());
-                    messenger.cntmax(number_of_files);
 
                     // fill into entries
                     let entries = fileinfo_map.entry(key).or_insert(Vec::new());
@@ -109,9 +106,8 @@ fn calc_checksum(map: &mut HashMap<String, Vec<FileInfo>>, messenger: &Messenger
         }
 
         count += 1;
-        messenger.info("Calculate Checksums".to_owned());
-        messenger.cntmax(len);
-        messenger.cntcur(count);
+        //messenger.info("Calculate Checksums".to_owned());
+        messenger.set_progress(len, count, "Calculate Checksums...");
 
         if item.len() > 1 {
             for fi in item.into_iter() {
@@ -130,17 +126,13 @@ fn check_for_duplicates(
     let len = metas.len();
     let mut duplicates: Vec<String> = Vec::new();
 
-    messenger.info("Check for duplicates".to_owned());
-    messenger.cntmax(len);
-    messenger.cntcur(count);
-
     for (key, file_infos) in metas.iter() {
         if messenger.is_stopped() {
             break;
         }
 
         count += 1;
-        messenger.cntcur(count);
+        messenger.set_progress(len, count, "Check for duplicates...");
         if !key.is_empty() {
             let dups = find_duplicates(&scan_type, &file_infos);
             for dup in dups {

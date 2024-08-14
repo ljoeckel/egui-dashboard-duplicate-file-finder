@@ -19,8 +19,11 @@ pub struct NotificationBar {
     /// Message to display in the notifications bar
     message: String,
     message_type: MessageType,
+
     /// Expand the bottom bar
     expanded: bool,
+    // Calculated progress for the progressbar. Call set_progress first.
+    progress: f32,
 }
 
 impl NotificationBar {
@@ -30,17 +33,32 @@ impl NotificationBar {
             message: NO_NOTIFICATIONS.to_owned(),
             message_type: MessageType::INFO,
             expanded: false,
+            progress: 0.0,
         }
     }
 
     pub fn info(&mut self, message: &str) {
         self.set_message(message, MessageType::INFO);
     }
+
     pub fn warn(&mut self, message: &str) {
         self.set_message(message,MessageType::WARNING);
     }
+
     pub fn error(&mut self, message: &str) {
         self.set_message(message, MessageType::ERROR);
+    }
+
+    pub fn set_progress(&mut self, progress: f32, info: &str) {
+        self.progress = progress;
+        if !info.is_empty() {
+            self.set_message(info, MessageType::INFO);
+        }
+    }
+
+    pub fn clear(&mut self) {
+        self.progress = 0.0;
+        self.message = String::new();
     }
 
     fn set_message(&mut self, message: &str, message_type: MessageType) {
@@ -73,6 +91,13 @@ impl NotificationBar {
                     self.expanded = false;
                 }
 
+                if self.progress > 0.0 && self.progress < 1.0 {
+                    let progress_bar = egui::ProgressBar::new(self.progress)
+                        .show_percentage()
+                        .desired_width(400.0);
+                    ui_panel_layout.add(progress_bar);
+                }
+
                 ui_panel_layout.with_layout(
                     egui::Layout::left_to_right(alignment),
                     |ui_panel_layout_label| {
@@ -86,7 +111,6 @@ impl NotificationBar {
                             .add(egui::Label::new(egui::RichText::new(&self.message)
                                 .background_color(bg)
                                 .color(fg)
-                                .raised()
                             ).wrap())
                     },
                 );

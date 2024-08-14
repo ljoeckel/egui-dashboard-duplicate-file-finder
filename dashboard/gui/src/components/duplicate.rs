@@ -119,18 +119,10 @@ pub fn duplicate_ui(
             dss.file_dialog.select_directory();
         }
     });
+    ui.add_space(12.0);
 
-    // Infofield
-    let info = dss.messenger.info.lock().unwrap().to_string();
-    ui.heading(info);
-    ui.add_space(5.0);
-
-    // Progressbar
-    let f_items_max = dss.messenger.cntmax.lock().as_deref().unwrap().clone() as f32;
-    let f_items_current = dss.messenger.cntcur.lock().as_deref().unwrap().clone() as f32;
-    let progress = f_items_current / f_items_max;
-    let progress_bar = egui::ProgressBar::new(progress).show_percentage();
-    ui.add(progress_bar);
+    // Update data for the ProgressBar
+    notification_bar.set_progress(dss.messenger.progress(), "");
 
     // Scan / Abort Buttons
     ui.horizontal(|ui| {
@@ -139,6 +131,8 @@ pub fn duplicate_ui(
             .clicked()
         {
             dss.clear();
+            notification_bar.clear();
+
             let messenger = dss.messenger.clone();
             let path = dss.path.clone();
 
