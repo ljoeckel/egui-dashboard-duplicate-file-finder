@@ -7,7 +7,6 @@ use eframe::egui::{self};
 use egui_aesthetix::Aesthetix;
 use egui_extras::{Column, TableBuilder};
 use std::rc::Rc;
-use crate::components::notifications::NotificationBar;
 
 pub struct SettingsUI {
     pub media_groups: Vec<MediaGroup>,
@@ -26,7 +25,6 @@ impl SettingsUI {
         ui: &mut egui::Ui,
         state: &mut ApplicationState,
         themes: &[Rc<dyn Aesthetix>],
-        notification_bar: &mut NotificationBar,
     ) {
         let ctx = ui.ctx().clone();
 
@@ -86,7 +84,6 @@ impl SettingsUI {
                         self.media_groups[i].media_types[j].selected =
                             self.media_groups[i].selected;
                     }
-                    notification_bar.info("MediaTypes changed!");
                 }
             }
         });
