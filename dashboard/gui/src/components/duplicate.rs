@@ -14,6 +14,7 @@ use eframe::egui::{Color32, Label, RichText, ScrollArea, TextStyle};
 use egui::scroll_area::ScrollBarVisibility;
 use egui::{epaint::text::TextWrapMode, Ui};
 use egui_file_dialog::FileDialog;
+use crate::components::notifications::NotificationBar;
 
 #[derive(PartialEq)]
 enum ShowView {
@@ -99,6 +100,7 @@ pub fn duplicate_ui(
     ctx: &egui::Context,
     dss: &mut DuplicateScannerUI,
     media_groups: Vec<MediaGroup>,
+    notification_bar: &mut NotificationBar,
 ) {
     let is_scanning = dss.is_scanning();
 
@@ -202,7 +204,11 @@ pub fn duplicate_ui(
         }
     });
 
-    if is_scanning && !ctx.has_requested_repaint() {
+    let info = dss.messenger.info.lock().unwrap().to_string();
+    notification_bar.info(info.as_str());
+
+    //if is_scanning && !ctx.has_requested_repaint() {
+    if !ctx.has_requested_repaint() {
         ctx.request_repaint_after(Duration::from_millis(100));
     }
 }

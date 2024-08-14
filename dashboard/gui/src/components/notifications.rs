@@ -6,19 +6,21 @@ use eframe::egui;
 // Text to display when there are no notifications
 const NO_NOTIFICATIONS: &str = "No new notifications";
 
+#[derive(Debug)]
+enum MessageType {
+    INFO,
+    WARNING,
+    ERROR,
+}
+
 /// Renders the notifications bar at the bottom of the app
 #[derive(Debug)]
 pub struct NotificationBar {
     /// Message to display in the notifications bar
     message: String,
+    message_type: MessageType,
     /// Expand the bottom bar
     expanded: bool,
-}
-
-impl Default for NotificationBar {
-    fn default() -> Self {
-        Self::new()
-    }
 }
 
 impl NotificationBar {
@@ -26,8 +28,24 @@ impl NotificationBar {
     pub fn new() -> Self {
         Self {
             message: NO_NOTIFICATIONS.to_owned(),
+            message_type: MessageType::INFO,
             expanded: false,
         }
+    }
+
+    pub fn info(&mut self, message: &str) {
+        self.set_message(message, MessageType::INFO);
+    }
+    pub fn warn(&mut self, message: &str) {
+        self.set_message(message,MessageType::WARNING);
+    }
+    pub fn error(&mut self, message: &str) {
+        self.set_message(message, MessageType::ERROR);
+    }
+
+    fn set_message(&mut self, message: &str, message_type: MessageType) {
+        self.message = message.to_string();
+        self.message_type = message_type;
     }
 
     /// Renders the bottom bar
@@ -58,8 +76,18 @@ impl NotificationBar {
                 ui_panel_layout.with_layout(
                     egui::Layout::left_to_right(alignment),
                     |ui_panel_layout_label| {
+                        let (bg, fg);
+                        match self.message_type {
+                            MessageType::INFO => (bg = state.active_theme.bg_secondary_color_visuals(), fg = state.active_theme.fg_success_text_color_visuals()),
+                            MessageType::WARNING => (bg = state.active_theme.bg_triage_color_visuals(), fg = state.active_theme.fg_warn_text_color_visuals()),
+                            MessageType::ERROR => (bg = state.active_theme.bg_contrast_color_visuals(), fg = state.active_theme.fg_error_text_color_visuals()),
+                        };
                         ui_panel_layout_label
-                            .add(egui::Label::new(egui::RichText::new(&self.message)).wrap())
+                            .add(egui::Label::new(egui::RichText::new(&self.message)
+                                .background_color(bg)
+                                .color(fg)
+                                .raised()
+                            ).wrap())
                     },
                 );
             });

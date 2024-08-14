@@ -18,7 +18,6 @@ use crate::components::duplicate::DuplicateScannerUI;
 use crate::components::settings::SettingsUI;
 
 /// Holds application state and implements the business logic.
-//#[derive(Debug)]
 pub struct Dashboard {
     /// Holds the state of the application
     state: ApplicationState,
@@ -61,7 +60,7 @@ impl Dashboard {
             None => Rc::new(StandardDark),
         };
 
-        let state = ApplicationState::new(active_theme);
+        let state = ApplicationState::new(Rc::clone(&active_theme));
 
         // Load the custom font
         use crate::scanner::font::setup_custom_fonts;
@@ -161,6 +160,7 @@ impl eframe::App for Dashboard {
                             context,
                             &mut self.duplicate_scanner_state,
                             self.settings_state.media_groups.clone(),
+                            &mut self.notification_bar,
                         );
                     }
 
@@ -171,6 +171,7 @@ impl eframe::App for Dashboard {
                             ui_central_panel,
                             &mut self.state,
                             &self.themes,
+                            &mut self.notification_bar,
                         );
                     }
 
