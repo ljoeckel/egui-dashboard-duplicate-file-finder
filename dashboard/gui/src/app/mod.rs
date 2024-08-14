@@ -171,7 +171,6 @@ impl eframe::App for Dashboard {
                             ui_central_panel,
                             &mut self.state,
                             &self.themes,
-                            &mut self.notification_bar,
                         );
                     }
 
