@@ -24,7 +24,7 @@ impl Messenger {
         }
     }
 
-    pub fn clear(&mut self) {
+    pub fn clear(&self) {
         *self.scanner_control.lock().unwrap() = Control::INFO;
         self.stdlog.lock().unwrap().clear();
         self.errlog.lock().unwrap().clear();
@@ -52,9 +52,9 @@ impl Messenger {
         self.errlog.lock().unwrap().push(str.clone());
     }
 
-    pub fn info(&self, str: String) {
-        *self.info.lock().unwrap() = str;
-    }
+    pub fn set_info(&self, str: String) { *self.info.lock().unwrap() = str; }
+
+    pub fn info(&self) -> String { return self.info.lock().unwrap().to_string(); }
 
     pub fn cntstd(&self) -> usize {
         self.stdlog.lock().unwrap().len()
@@ -74,7 +74,5 @@ impl Messenger {
             *self.info.lock().unwrap() = String::from(info);
         }
     }
-    pub fn progress(&self) -> f32 {
-        *self.progress.lock().unwrap()
-    }
+    pub fn progress(&self) -> f32 { *self.progress.lock().unwrap() }
 }

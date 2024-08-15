@@ -32,8 +32,8 @@ pub struct DuplicateScannerUI {
     handle: Option<std::thread::JoinHandle<()>>,
 }
 
-impl Default for DuplicateScannerUI {
-    fn default() -> Self {
+impl DuplicateScannerUI {
+    pub fn new() -> Self {
         Self {
             view: ShowView::Scanned,
             path: String::new(),
@@ -41,14 +41,6 @@ impl Default for DuplicateScannerUI {
             messenger: Messenger::new(),
             scanning: false,
             handle: None,
-        }
-    }
-}
-
-impl DuplicateScannerUI {
-    pub fn new() -> Self {
-        Self {
-            ..Default::default()
         }
     }
 
@@ -103,6 +95,8 @@ pub fn duplicate_ui(
     notification_bar: &mut NotificationBar,
 ) {
     let is_scanning = dss.is_scanning();
+    // Update the NotificationBar
+    notification_bar.info(&dss.messenger.info());
 
     ui.add_space(30.0);
 
@@ -198,10 +192,6 @@ pub fn duplicate_ui(
         }
     });
 
-    let info = dss.messenger.info.lock().unwrap().to_string();
-    notification_bar.info(info.as_str());
-
-    //if is_scanning && !ctx.has_requested_repaint() {
     if !ctx.has_requested_repaint() {
         ctx.request_repaint_after(Duration::from_millis(100));
     }

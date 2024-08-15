@@ -1,6 +1,3 @@
-pub const IGNORE_EXT: &str =
-    ".MF,.GITIGNORE,.RLIB,.RMETA,.BIN,.TIMESTAMP,.IDX,.LOCK,.A,.O,.DS_STORE,._.DS_SSTORE,.M3U,.NFO,.RTF,.SFV,.URL,.WPL,.LOG,.BAK";
-
 #[derive(Debug)]
 pub enum ScanType {
     BINARY,
@@ -14,20 +11,26 @@ pub enum Control {
 #[derive(Debug, Clone)]
 pub struct MediaGroup {
     pub name: String,
-    pub selected: bool,
     pub media_types: Vec<MediaType>,
+    pub selected: bool,
 }
 impl MediaGroup {
-    fn new(name: &str, media_types: Vec<MediaType>) -> Self {
+    fn new(name: &str, mut media_types: Vec<MediaType>, selected: bool) -> Self {
+        // Setup selected for mediatypes
+        for i in 0..media_types.len() {
+            media_types[i].selected = selected;
+        }
+
         Self {
             name: name.to_owned(),
-            selected: true,
             media_types,
+            selected
         }
     }
 
     pub fn is_selected(&self, extension: &str) -> bool {
-        if self.media_types
+        if self.selected &&
+            self.media_types
             .iter()
             .any(|t| t.extension.eq(extension) && t.selected) {
             return true;
@@ -54,10 +57,11 @@ impl MediaType {
 
     pub fn load_groups() -> Vec<MediaGroup> {
         vec![
-            MediaGroup::new("Audio", audio_types()),
-            MediaGroup::new("Document", document_types()),
-            MediaGroup::new("Image", image_types()),
-            MediaGroup::new("Video", video_types()),
+            MediaGroup::new("Audio", audio_types(), true),
+            MediaGroup::new("Document", document_types(), true),
+            MediaGroup::new("Image", image_types(), true),
+            MediaGroup::new("Video", video_types(), true),
+            MediaGroup::new("IGNORED", ignore_types(), false),
         ]
     }
 }
@@ -139,3 +143,31 @@ fn document_types() -> Vec<MediaType> {
         MediaType::new(".txt", "Plain text file"),
     ]
 }
+
+fn ignore_types() -> Vec<MediaType> {
+    vec![
+        MediaType::new("._", "Files with this extension will be ignored"),
+        MediaType::new(".A", "Files with this extension will be ignored"),
+        MediaType::new(".BAK", "Files with this extension will be ignored"),
+        MediaType::new(".BIN", "Files with this extension will be ignored"),
+        MediaType::new(".DS_STORE", "Files with this extension will be ignored"),
+        MediaType::new(".DS_SSTORE", "Files with this extension will be ignored"),
+        MediaType::new(".GITIGNORE", "Files with this extension will be ignored"),
+        MediaType::new(".IDX", "Files with this extension will be ignored"),
+        MediaType::new(".LOCK", "Files with this extension will be ignored"),
+        MediaType::new(".LOG", "Files with this extension will be ignored"),
+        MediaType::new(".M3U", "Files with this extension will be ignored"),
+        MediaType::new(".MF", "Files with this extension will be ignored"),
+        MediaType::new(".NFO", "Files with this extension will be ignored"),
+        MediaType::new(".O", "Files with this extension will be ignored"),
+        MediaType::new(".RLIB", "Files with this extension will be ignored"),
+        MediaType::new(".RMETA", "Files with this extension will be ignored"),
+        MediaType::new(".RTF", "Files with this extension will be ignored"),
+        MediaType::new(".SFV", "Files with this extension will be ignored"),
+        MediaType::new(".TIMESTAMP", "Files with this extension will be ignored"),
+        MediaType::new(".URL", "Files with this extension will be ignored"),
+        MediaType::new(".WPL", "Files with this extension will be ignored"),
+    ]
+}
+
+

@@ -58,7 +58,7 @@ impl NotificationBar {
 
     pub fn clear(&mut self) {
         self.progress = 0.0;
-        self.message = String::new();
+        self.set_message("", MessageType::INFO);
     }
 
     fn set_message(&mut self, message: &str, message_type: MessageType) {

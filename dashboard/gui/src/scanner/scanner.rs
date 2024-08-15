@@ -1,4 +1,4 @@
-use crate::scanner::mediatype::{MediaGroup, ScanType, IGNORE_EXT};
+use crate::scanner::mediatype::{MediaGroup, ScanType};
 use crate::scanner::messenger::Messenger;
 
 use std::{
@@ -32,7 +32,13 @@ pub fn scan(path: &Path, scan_type: ScanType, media_groups: Vec<MediaGroup>, mes
 
     // 4. Print the duplicates to stdout
     match create_bash_script(&duplicates, &messenger) {
-        Ok(dups_written) => messenger.info(format!("{} duplicates written to file {}", dups_written, SCRIPT_NAME)),
+        Ok(dups_written) => {
+            if dups_written > 0 {
+                messenger.set_info(format!("{} duplicates written to file {}", dups_written, SCRIPT_NAME))
+            } else {
+                messenger.set_info("".to_string());
+            }
+        },
         Err(e) => messenger.push_errlog(format!("Could not write file {} due to error {}", SCRIPT_NAME, e)),
     }
 }
@@ -49,12 +55,11 @@ fn walk_dir(
 ) -> HashMap<String, Vec<FileInfo>> {
     let mut fileinfo_map: HashMap<String, Vec<FileInfo>> = HashMap::new();
 
-    messenger.info("Scanning...".to_owned());
+    messenger.set_info("Scanning...".to_owned());
 
     for entry in WalkDir::new(root_path)
         .into_iter()
         .filter_map(Result::ok)
-        .filter(|e| !e.file_type().is_dir() && !ignore_extension(e.path()))
     {
         if messenger.is_stopped() {
             break;
@@ -102,6 +107,7 @@ fn calc_checksum(map: &mut HashMap<String, Vec<FileInfo>>, messenger: &Messenger
 
     for item in map.values_mut() {
         if messenger.is_stopped() {
+            messenger.set_progress(0, 0, "");
             break;
         }
 
@@ -128,6 +134,7 @@ fn check_for_duplicates(
 
     for (key, file_infos) in metas.iter() {
         if messenger.is_stopped() {
+            messenger.set_progress(0, 0, "");
             break;
         }
 
@@ -253,15 +260,6 @@ pub fn get_extension(path: &str) -> String {
     extension
 }
 
-pub fn ignore_extension(path: &Path) -> bool {
-    let full_path = path.to_str().unwrap_or("");
-    let ignore = match full_path.rfind('.') {
-        Some(idx) => IGNORE_EXT.contains(&full_path[idx..].to_uppercase()),
-        None => false,
-    };
-    ignore
-}
-
 #[derive(Debug)]
 struct FileInfo {
     dir_entry: DirEntry,
@@ -295,6 +293,4 @@ impl FileInfo {
         };
         key
     }
-
-    // Read audio metadata
 }
