@@ -28,6 +28,15 @@ impl MediaGroup {
         }
     }
 
+    pub fn is_known_extension(&self, extension: &str) -> bool {
+        if self.media_types
+           .iter()
+           .any(|t| t.extension.eq(extension)) {
+           return true;
+        }
+        false
+    }
+
     pub fn is_selected(&self, extension: &str) -> bool {
         if self.selected &&
             self.media_types
@@ -119,12 +128,13 @@ fn audio_types() -> Vec<MediaType> {
 
 fn image_types() -> Vec<MediaType> {
     vec![
-        MediaType::new(".png", "Portable Network Graphic"),
-        MediaType::new(".png", "Portable Network Graphic"),
+        MediaType::new(".bmp", "Bitmap Image"),
+        MediaType::new(".ico", "Microsoft Icon file"),
         MediaType::new(".jpg", "JPEG Image"),
         MediaType::new(".jpeg", "JPEG Image"),
+        MediaType::new(".png", "Portable Network Graphic"),
+        MediaType::new(".tif", "Tagged Image Format"),
         MediaType::new(".tiff", "Tagged Image Format"),
-        MediaType::new(".bmp", "Bitmap Image"),
     ]
 }
 
@@ -140,23 +150,43 @@ fn document_types() -> Vec<MediaType> {
     vec![
         MediaType::new(".doc", "Microsoft Word Document (Old format)"),
         MediaType::new(".docx", "Microsoft Word Document"),
+        MediaType::new(".odt", "OpenOffice Document"),
+        MediaType::new(".odp", "OpenOffice Presentation Document"),
+        MediaType::new(".ods", "OpenOffice Document"),
         MediaType::new(".pdf", "Adobes multi-platform document format"),
         MediaType::new(".ppt", "Microsoft Powerpoint"),
-        MediaType::new(".pptx", "Microsoft Powerpoint"),
+        MediaType::new(".ppsx", "OpenOffice file"),
+        MediaType::new(".pptm", "Microsoft Powerpoint Macro"),
+        MediaType::new(".pptx", "Microsoft Powerpoint OpenXML"),
+        MediaType::new(".sdw", "StarOffice Writer Datei"),
         MediaType::new(".txt", "Plain text file"),
     ]
 }
 
 fn development_types() -> Vec<MediaType> {
     vec![
-        MediaType::new(".rs", "Rust source file"),
-        MediaType::new(".js", "JavaScript source file"),
-        MediaType::new(".html", "HTML File"),
-        MediaType::new(".css", "Cascading Style Sheet"),
-        MediaType::new(".xml", "XML File"),
-        MediaType::new(".java", "Java Source file"),
-        MediaType::new(".sh", "Unix Shell-Script"),
         MediaType::new(".bat", "Windows Batch file"),
+        MediaType::new(".css", "Cascading Style Sheet"),
+        MediaType::new(".classpath", "Java Classpath"),
+        MediaType::new(".conf", "Config File"),
+        MediaType::new(".gz", "tar compressed Archive"),
+        MediaType::new(".htm", "HTML File"),
+        MediaType::new(".html", "HTML File"),
+        MediaType::new(".java", "Java Source file"),
+        MediaType::new(".js", "JavaScript source file"),
+        MediaType::new(".json", "JSON file"),
+        MediaType::new(".project", "Project configuration file"),
+        MediaType::new(".properties", "Properties file"),
+        MediaType::new(".prefs", "Preferences file"),
+        MediaType::new(".rar", "Archive file"),
+        MediaType::new(".rs", "Rust source file"),
+        MediaType::new(".sh", "Unix Shell-Script"),
+        MediaType::new(".svg", "Scaleable Vector Graphic"),
+        MediaType::new(".tar", "Tar archive file"),
+        MediaType::new(".toml", "Rust Toml configuration file"),
+        MediaType::new(".xlsx", "OpenOffice File"),
+        MediaType::new(".xml", "XML File"),
+        MediaType::new(".zip", "ZIP Archive File"),
     ]
 }
 

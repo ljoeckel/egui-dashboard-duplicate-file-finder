@@ -86,7 +86,12 @@ fn walk_dir(
                     let entries = fileinfo_map.entry(key).or_insert(Vec::new());
                     entries.push(file_info);
                 } else {
-                    messenger.push_errlog(path);
+                    // Do not log known extensions
+                    if !media_groups
+                        .iter()
+                        .any(|mg| mg.is_known_extension(extension)) {
+                        messenger.push_errlog(path);
+                    }
                 }
             }
             Err(e) => {
