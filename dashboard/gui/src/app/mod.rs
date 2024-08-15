@@ -63,7 +63,7 @@ impl Dashboard {
         let state = ApplicationState::new(Rc::clone(&active_theme));
 
         // Load the custom font
-        use crate::scanner::font::setup_custom_fonts;
+        use crate::components::basic::font::setup_custom_fonts;
         setup_custom_fonts(&cc.egui_ctx);
 
         // Initialize the custom theme/styles for egui

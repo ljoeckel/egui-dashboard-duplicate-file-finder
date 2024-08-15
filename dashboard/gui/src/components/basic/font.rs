@@ -9,7 +9,7 @@ pub fn setup_custom_fonts(ctx: &egui::Context) {
     fonts.font_data.insert(
         font_name.to_owned(),
         egui::FontData::from_static(include_bytes!(
-            "../assets/IBMPlexMono/BlexMonoNerdFont-Regular.ttf"
+            "../../assets/IBMPlexMono/BlexMonoNerdFont-Regular.ttf"
         )),
     );
 
