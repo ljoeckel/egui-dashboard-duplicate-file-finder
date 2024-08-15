@@ -18,7 +18,7 @@ pub fn scan(path: &Path, scan_type: ScanType, media_groups: Vec<MediaGroup>, mes
         return;
     }
 
-    // 1. Walk recursivly down from the root_path and group files by size/type
+    // 1. Walk recursive down from the root_path and group files by size/type
     let mut metas = walk_dir(&path, &scan_type, &media_groups, &messenger);
 
     // 2. Calculate file checksum from the first BUF_SIZE bytes from
@@ -32,9 +32,9 @@ pub fn scan(path: &Path, scan_type: ScanType, media_groups: Vec<MediaGroup>, mes
 
     // 4. Print the duplicates to stdout
     match create_bash_script(&duplicates, &messenger) {
-        Ok(dups_written) => {
-            if dups_written > 0 {
-                messenger.set_info(format!("{} duplicates written to file {}", dups_written, SCRIPT_NAME))
+        Ok(duplicates_written) => {
+            if duplicates_written > 0 {
+                messenger.set_info(format!("{} duplicates written to file {}", duplicates_written, SCRIPT_NAME))
             } else {
                 messenger.set_info("".to_string());
             }
@@ -76,7 +76,7 @@ fn walk_dir(
                     .any(|mg| mg.is_selected(extension)) {
                     let key = match scan_type {
                         ScanType::BINARY => file_info.get_key(metadata.len()),
-                        ScanType::METADATA => String::new(), // TODO: Implement Metatdata compare
+                        ScanType::METADATA => String::new(), // TODO: Implement Metadata compare
                     };
 
                     // update messenger
@@ -142,8 +142,7 @@ fn check_for_duplicates(
         count += 1;
         messenger.set_progress(len, count, "Check for duplicates...");
         if !key.is_empty() {
-            let dups = find_duplicates(&scan_type, &file_infos);
-            for dup in dups {
+            for dup in find_duplicates(&scan_type, &file_infos) {
                 duplicates.push(dup.clone());
                 messenger.push_reslog(dup);
             }
@@ -181,7 +180,7 @@ fn find_duplicates(scan_type: &ScanType, file_infos: &Vec<FileInfo>) -> HashSet<
     duplicates
 }
 
-/// Reads the first BUF_SIZE bytes from a file and creates a isize checksum.
+/// Reads the first BUF_SIZE bytes from a file and creates an isize checksum.
 ///
 /// Returns the isize checksum
 fn get_header_checksum(path: &str) -> isize {
@@ -211,7 +210,7 @@ fn get_header_checksum(path: &str) -> isize {
     checksum
 }
 
-/// Reads all bytes from a file calculate a isize checksum.
+/// Reads all bytes from a file calculate an isize checksum.
 ///
 /// Returns the isize checksum
 fn get_file_checksum(path: &str) -> isize {
@@ -269,7 +268,7 @@ struct FileInfo {
 impl FileInfo {
     pub fn new(dir_entry: DirEntry) -> FileInfo {
         FileInfo {
-            dir_entry: dir_entry,
+            dir_entry,
             checksum: 0,
         }
     }
@@ -277,9 +276,9 @@ impl FileInfo {
     /// Returns the String representation of file's path
     pub fn path(&self) -> String {
         match self.dir_entry.path().to_str() {
-            Some(s) => return s.to_owned(),
-            None => return "".to_owned(),
-        };
+            Some(s) => s.to_owned(),
+            None => String::new(),
+        }
     }
 
     /// Returns a String as key for the hashmap.
