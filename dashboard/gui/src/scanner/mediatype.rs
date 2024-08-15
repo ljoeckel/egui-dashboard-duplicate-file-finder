@@ -61,6 +61,7 @@ impl MediaType {
             MediaGroup::new("Document", document_types(), true),
             MediaGroup::new("Image", image_types(), true),
             MediaGroup::new("Video", video_types(), true),
+            MediaGroup::new("Development", development_types(), false),
             MediaGroup::new("IGNORED", ignore_types(), false),
         ]
     }
@@ -140,14 +141,29 @@ fn document_types() -> Vec<MediaType> {
         MediaType::new(".doc", "Microsoft Word Document (Old format)"),
         MediaType::new(".docx", "Microsoft Word Document"),
         MediaType::new(".pdf", "Adobes multi-platform document format"),
+        MediaType::new(".ppt", "Microsoft Powerpoint"),
+        MediaType::new(".pptx", "Microsoft Powerpoint"),
         MediaType::new(".txt", "Plain text file"),
+    ]
+}
+
+fn development_types() -> Vec<MediaType> {
+    vec![
+        MediaType::new(".rs", "Rust source file"),
+        MediaType::new(".js", "JavaScript source file"),
+        MediaType::new(".html", "HTML File"),
+        MediaType::new(".css", "Cascading Style Sheet"),
+        MediaType::new(".xml", "XML File"),
+        MediaType::new(".java", "Java Source file"),
+        MediaType::new(".sh", "Unix Shell-Script"),
+        MediaType::new(".bat", "Windows Batch file"),
     ]
 }
 
 fn ignore_types() -> Vec<MediaType> {
     vec![
         MediaType::new("._", "Files with this extension will be ignored"),
-        MediaType::new(".A", "Files with this extension will be ignored"),
+        MediaType::new(".A", "Binary Archive file"),
         MediaType::new(".BAK", "Files with this extension will be ignored"),
         MediaType::new(".BIN", "Files with this extension will be ignored"),
         MediaType::new(".DS_STORE", "Files with this extension will be ignored"),
@@ -164,9 +180,12 @@ fn ignore_types() -> Vec<MediaType> {
         MediaType::new(".RMETA", "Files with this extension will be ignored"),
         MediaType::new(".RTF", "Files with this extension will be ignored"),
         MediaType::new(".SFV", "Files with this extension will be ignored"),
+        MediaType::new(".SO", "Binary Shared Object file"),
         MediaType::new(".TIMESTAMP", "Files with this extension will be ignored"),
         MediaType::new(".URL", "Files with this extension will be ignored"),
         MediaType::new(".WPL", "Files with this extension will be ignored"),
+        MediaType::new(".zotero-ft-cache", "Zotero file"),
+        MediaType::new(".zotero-ft-info", "Zotero file"),
     ]
 }
 

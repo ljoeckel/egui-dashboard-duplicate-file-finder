@@ -114,6 +114,7 @@ pub fn duplicate_ui(
         }
     });
     ui.add_space(12.0);
+    ui.separator();
 
     // Update data for the ProgressBar
     notification_bar.set_progress(dss.messenger.progress(), "");
