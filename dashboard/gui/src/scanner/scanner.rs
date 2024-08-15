@@ -60,6 +60,7 @@ fn walk_dir(
     for entry in WalkDir::new(root_path)
         .into_iter()
         .filter_map(Result::ok)
+        .filter(|e|!e.path().is_dir())
     {
         if messenger.is_stopped() {
             break;
