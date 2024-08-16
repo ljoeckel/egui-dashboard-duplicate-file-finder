@@ -5,3 +5,4 @@ pub mod debug;
 pub mod duplicate;
 pub mod notifications;
 pub mod settings;
+mod duplicates_table;

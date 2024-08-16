@@ -7,14 +7,17 @@ use std::{
     sync::MutexGuard,
     thread::{self},
     time::Duration,
+    vec::Vec,
 };
-
+use std::rc::Rc;
 use eframe::egui;
 use eframe::egui::{Color32, Label, RichText, ScrollArea, TextStyle};
 use egui::scroll_area::ScrollBarVisibility;
 use egui::{epaint::text::TextWrapMode, Ui};
+use egui_aesthetix::Aesthetix;
 use egui_file_dialog::FileDialog;
 use crate::components::notifications::NotificationBar;
+use crate::components::duplicates_table;
 
 #[derive(PartialEq)]
 enum ShowView {
@@ -56,30 +59,31 @@ impl DuplicateScannerUI {
         }
     }
 
-    fn color(&self, ui: &Ui) -> (MutexGuard<Vec<String>>, Color32) {
+    fn color(&self, ui: &Ui) -> (MutexGuard<Vec<String>>, MutexGuard<Vec<bool>>, Color32) {
+        let checked = self.messenger.checked.lock().unwrap();
         match self.view {
             ShowView::Scanned => {
                 let stack = self.messenger.stdlog.lock().unwrap();
                 if ui.visuals().dark_mode {
-                    (stack, Color32::LIGHT_BLUE)
+                    (stack, checked, Color32::LIGHT_BLUE)
                 } else {
-                    (stack, Color32::DARK_BLUE)
+                    (stack, checked, Color32::DARK_BLUE)
                 }
             }
             ShowView::Duplicates => {
                 let stack = self.messenger.reslog.lock().unwrap();
                 if ui.visuals().dark_mode {
-                    (stack, Color32::LIGHT_GREEN)
+                    (stack, checked, Color32::LIGHT_GREEN)
                 } else {
-                    (stack, Color32::DARK_GREEN)
+                    (stack, checked, Color32::DARK_GREEN)
                 }
             }
             ShowView::Errors => {
                 let stack = self.messenger.errlog.lock().unwrap();
                 if ui.visuals().dark_mode {
-                    (stack, Color32::LIGHT_RED)
+                    (stack, checked, Color32::LIGHT_RED)
                 } else {
-                    (stack, Color32::DARK_RED)
+                    (stack, checked, Color32::DARK_RED)
                 }
             }
         }
@@ -93,6 +97,7 @@ pub fn duplicate_ui(
     dss: &mut DuplicateScannerUI,
     media_groups: Vec<MediaGroup>,
     notification_bar: &mut NotificationBar,
+    active_theme: &Rc<dyn Aesthetix>,
 ) {
     let is_scanning = dss.is_scanning();
     // Update the NotificationBar
@@ -176,24 +181,30 @@ pub fn duplicate_ui(
     let text_style = TextStyle::Monospace;
     let row_height = ui.text_style_height(&text_style);
     let scroll_area = ScrollArea::vertical()
-        .scroll_bar_visibility(ScrollBarVisibility::VisibleWhenNeeded)
+        .scroll_bar_visibility(ScrollBarVisibility::AlwaysVisible)
         .auto_shrink(false)
         .hscroll(true)
         .stick_to_bottom(true);
 
-    let (stack, color) = dss.color(&ui);
-    scroll_area.show_rows(ui, row_height, stack.len(), |ui, row_range| {
-        for row in row_range {
-            let msg = stack.get(row).unwrap();
-            let rt = RichText::new(msg).color(color);
-            ui.add(Label::new(rt).wrap_mode(TextWrapMode::Extend));
-            if is_scanning && !ctx.has_requested_repaint() {
-                ctx.request_repaint();
+    let (stack, checked, color) = dss.color(&ui);
+    if dss.view == ShowView::Duplicates {
+        ui.vertical(|vert| {
+            duplicates_table::mediatable(vert, active_theme, &stack, checked);
+        }); // vert
+    } else {
+        scroll_area.show_rows(ui, row_height, stack.len(), |ui, row_range| {
+            for row in row_range {
+                let msg = stack.get(row).unwrap();
+                let rt = RichText::new(msg).color(color);
+                ui.add(Label::new(rt).wrap_mode(TextWrapMode::Extend));
+                if is_scanning && !ctx.has_requested_repaint() {
+                    ctx.request_repaint();
+                }
             }
-        }
-    });
+        });
+    }
 
     if !ctx.has_requested_repaint() {
-        ctx.request_repaint_after(Duration::from_millis(100));
+        ctx.request_repaint_after(Duration::from_millis(250));
     }
 }

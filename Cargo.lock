@@ -898,6 +898,7 @@ dependencies = [
  "egui-file-dialog",
  "egui_extras",
  "env_logger",
+ "utf8_slice",
  "walkdir",
 ]
 
@@ -3066,6 +3067,12 @@ dependencies = [
  "idna",
  "percent-encoding",
 ]
+
+[[package]]
+name = "utf8_slice"
+version = "1.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "44109e280ecf0f5d8e6ee671c0ee650008275c51dc9e494badd11fb39d785408"
 
 [[package]]
 name = "utf8parse"

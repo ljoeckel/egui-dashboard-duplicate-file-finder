@@ -8,6 +8,7 @@ pub struct Messenger {
     pub stdlog: Arc<Mutex<Vec<String>>>,
     pub errlog: Arc<Mutex<Vec<String>>>,
     pub reslog: Arc<Mutex<Vec<String>>>,
+    pub checked: Arc<Mutex<Vec<bool>>>,
     pub info: Arc<Mutex<String>>,
     pub progress: Arc<Mutex<f32>>,
 }
@@ -19,6 +20,7 @@ impl Messenger {
             stdlog: Arc::new(Mutex::new(Vec::new())),
             errlog: Arc::new(Mutex::new(Vec::new())),
             reslog: Arc::new(Mutex::new(Vec::new())),
+            checked: Arc::new(Mutex::new(Vec::new())),
             info: Arc::new(Mutex::new(String::new())),
             progress: Arc::new(Mutex::new(0.0)),
         }
@@ -29,6 +31,7 @@ impl Messenger {
         self.stdlog.lock().unwrap().clear();
         self.errlog.lock().unwrap().clear();
         self.reslog.lock().unwrap().clear();
+        self.checked.lock().unwrap().clear();
         *self.info.lock().unwrap() = "".to_owned();
         *self.progress.lock().unwrap() = 0.0;
     }
@@ -46,6 +49,7 @@ impl Messenger {
 
     pub fn push_reslog(&self, str: String) {
         self.reslog.lock().unwrap().push(str.clone());
+        self.checked.lock().unwrap().push(false);
     }
 
     pub fn push_errlog(&self, str: String) {

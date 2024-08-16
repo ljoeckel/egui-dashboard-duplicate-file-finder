@@ -140,6 +140,6 @@ impl SettingsUI {
                         } // if selcted
                     } // for types
                 } // for group
-            });
+            }); // body
     }
 }

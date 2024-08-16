@@ -161,6 +161,7 @@ impl eframe::App for Dashboard {
                             &mut self.duplicate_scanner_state,
                             self.settings_state.media_groups.clone(),
                             &mut self.notification_bar,
+                            &self.state.active_theme,
                         );
                     }
 
