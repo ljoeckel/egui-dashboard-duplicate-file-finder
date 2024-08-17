@@ -11,6 +11,7 @@ pub struct Messenger {
     pub checked: Arc<Mutex<Vec<bool>>>,
     pub info: Arc<Mutex<String>>,
     pub progress: Arc<Mutex<f32>>,
+    group_lock: Arc<Mutex<bool>>, // Used to protect reslog+checked updates
 }
 
 impl Messenger {
@@ -23,6 +24,7 @@ impl Messenger {
             checked: Arc::new(Mutex::new(Vec::new())),
             info: Arc::new(Mutex::new(String::new())),
             progress: Arc::new(Mutex::new(0.0)),
+            group_lock: Arc::new(Mutex::new(true)),
         }
     }
 
@@ -48,6 +50,7 @@ impl Messenger {
     }
 
     pub fn push_reslog(&self, str: String) {
+        let _l = self.group_lock.lock();
         self.reslog.lock().unwrap().push(str.clone());
         self.checked.lock().unwrap().push(false);
     }
