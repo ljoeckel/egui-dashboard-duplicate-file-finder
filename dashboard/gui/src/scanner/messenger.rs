@@ -65,7 +65,13 @@ impl Messenger {
     }
 
     pub fn reslog(&self) -> MutexGuard<Vec<String>> {
+        let _l = self.group_lock.lock();
         self.reslog.lock().unwrap()
+    }
+
+    pub fn checked(&self) -> MutexGuard<Vec<bool>> {
+        let _l = self.group_lock.lock();
+        self.checked.lock().unwrap()
     }
 
     pub fn push_errlog(&self, str: String) {
@@ -78,10 +84,6 @@ impl Messenger {
 
     pub fn set_info(&self, str: String) {
         *self.info.lock().unwrap() = str;
-    }
-
-    pub fn checked(&self) -> MutexGuard<Vec<bool>> {
-        self.checked.lock().unwrap()
     }
 
     pub fn info(&self) -> String {
