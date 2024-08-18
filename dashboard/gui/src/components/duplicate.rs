@@ -1,4 +1,4 @@
-use crate::scanner::mediatype::{Control, MediaGroup, ScanType};
+use crate::scanner::mediatype::{MediaGroup, ScanType};
 use crate::scanner::messenger::Messenger;
 use crate::scanner::scanner::scan;
 
@@ -59,11 +59,11 @@ impl DuplicateScannerUI {
         }
     }
 
-    fn color(&self, ui: &Ui) -> (MutexGuard<Vec<String>>, MutexGuard<Vec<bool>>, Color32) {
-        let checked = self.messenger.checked.lock().unwrap();
+    fn get_stack_data(&self, ui: &Ui) -> (MutexGuard<Vec<String>>, MutexGuard<Vec<bool>>, Color32) {
+        let checked = self.messenger.checked();
         match self.view {
             ShowView::Scanned => {
-                let stack = self.messenger.stdlog.lock().unwrap();
+                let stack = self.messenger.stdlog();
                 if ui.visuals().dark_mode {
                     (stack, checked, Color32::LIGHT_BLUE)
                 } else {
@@ -71,7 +71,7 @@ impl DuplicateScannerUI {
                 }
             }
             ShowView::Duplicates => {
-                let stack = self.messenger.reslog.lock().unwrap();
+                let stack = self.messenger.reslog();
                 if ui.visuals().dark_mode {
                     (stack, checked, Color32::LIGHT_GREEN)
                 } else {
@@ -79,7 +79,7 @@ impl DuplicateScannerUI {
                 }
             }
             ShowView::Errors => {
-                let stack = self.messenger.errlog.lock().unwrap();
+                let stack = self.messenger.errlog();
                 if ui.visuals().dark_mode {
                     (stack, checked, Color32::LIGHT_RED)
                 } else {
@@ -145,7 +145,7 @@ pub fn duplicate_ui(
             .add_enabled(is_scanning, egui::Button::new("Abort"))
             .clicked()
         {
-            *dss.messenger.scanner_control.lock().unwrap() = Control::STOP;
+            dss.messenger.stop();
         }
 
         ui.add_space(5.0);
@@ -186,7 +186,7 @@ pub fn duplicate_ui(
         .hscroll(true)
         .stick_to_bottom(true);
 
-    let (stack, checked, color) = dss.color(&ui);
+    let (stack, checked, color) = dss.get_stack_data(&ui);
     if dss.view == ShowView::Duplicates {
         ui.vertical(|vert| {
             duplicates_table::mediatable(vert, active_theme, &stack, checked);

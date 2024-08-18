@@ -140,7 +140,6 @@ fn check_for_duplicates(
 
     for (key, file_infos) in metas.iter() {
         if messenger.is_stopped() {
-            messenger.set_progress(0, 0, "");
             break;
         }
 

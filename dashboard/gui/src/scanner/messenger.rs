@@ -1,16 +1,16 @@
 use crate::scanner::mediatype::Control;
 
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc, Mutex, MutexGuard};
 
 #[derive(Clone, Debug)]
 pub struct Messenger {
-    pub scanner_control: Arc<Mutex<Control>>,
-    pub stdlog: Arc<Mutex<Vec<String>>>,
-    pub errlog: Arc<Mutex<Vec<String>>>,
-    pub reslog: Arc<Mutex<Vec<String>>>,
-    pub checked: Arc<Mutex<Vec<bool>>>,
-    pub info: Arc<Mutex<String>>,
-    pub progress: Arc<Mutex<f32>>,
+    scanner_control: Arc<Mutex<Control>>,
+    stdlog: Arc<Mutex<Vec<String>>>,
+    errlog: Arc<Mutex<Vec<String>>>,
+    reslog: Arc<Mutex<Vec<String>>>,
+    checked: Arc<Mutex<Vec<bool>>>,
+    info: Arc<Mutex<String>>,
+    progress: Arc<Mutex<f32>>,
     group_lock: Arc<Mutex<bool>>, // Used to protect reslog+checked updates
 }
 
@@ -38,6 +38,11 @@ impl Messenger {
         *self.progress.lock().unwrap() = 0.0;
     }
 
+    pub fn stop(&self) {
+        *self.scanner_control.lock().unwrap() = Control::STOP;
+        self.set_progress(0, 0, "");
+    }
+
     pub fn is_stopped(&self) -> bool {
         match *self.scanner_control.lock().unwrap() {
             Control::STOP => true,
@@ -49,19 +54,39 @@ impl Messenger {
         self.stdlog.lock().unwrap().push(str.clone());
     }
 
+    pub fn stdlog(&self) -> MutexGuard<Vec<String>> {
+        self.stdlog.lock().unwrap()
+    }
+
     pub fn push_reslog(&self, str: String) {
         let _l = self.group_lock.lock();
         self.reslog.lock().unwrap().push(str.clone());
         self.checked.lock().unwrap().push(false);
     }
 
+    pub fn reslog(&self) -> MutexGuard<Vec<String>> {
+        self.reslog.lock().unwrap()
+    }
+
     pub fn push_errlog(&self, str: String) {
         self.errlog.lock().unwrap().push(str.clone());
     }
 
-    pub fn set_info(&self, str: String) { *self.info.lock().unwrap() = str; }
+    pub fn errlog(&self) -> MutexGuard<Vec<String>> {
+        self.errlog.lock().unwrap()
+    }
 
-    pub fn info(&self) -> String { return self.info.lock().unwrap().to_string(); }
+    pub fn set_info(&self, str: String) {
+        *self.info.lock().unwrap() = str;
+    }
+
+    pub fn checked(&self) -> MutexGuard<Vec<bool>> {
+        self.checked.lock().unwrap()
+    }
+
+    pub fn info(&self) -> String {
+        return self.info.lock().unwrap().to_string();
+    }
 
     pub fn cntstd(&self) -> usize {
         self.stdlog.lock().unwrap().len()
@@ -81,5 +106,7 @@ impl Messenger {
             *self.info.lock().unwrap() = String::from(info);
         }
     }
-    pub fn progress(&self) -> f32 { *self.progress.lock().unwrap() }
+    pub fn progress(&self) -> f32 {
+        *self.progress.lock().unwrap()
+    }
 }
