@@ -186,10 +186,10 @@ pub fn duplicate_ui(
         .hscroll(true)
         .stick_to_bottom(true);
 
-    let (stack, checked, color) = dss.get_stack_data(&ui);
+    let (mut stack, checked, color) = dss.get_stack_data(&ui);
     if dss.view == ShowView::Duplicates {
         ui.vertical(|vert| {
-            duplicates_table::mediatable(vert, active_theme, &stack, checked);
+            duplicates_table::mediatable(vert, active_theme, &mut stack, checked);
         }); // vert
     } else {
         scroll_area.show_rows(ui, row_height, stack.len(), |ui, row_range| {
