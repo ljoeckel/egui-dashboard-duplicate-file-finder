@@ -72,7 +72,7 @@ pub fn mediatable(
                                     let path = &duplicates[idx];
                                     if delete_file(path) {
                                         // Remove from duplicates/checked
-                                        &duplicates.remove(idx);
+                                        let _ = &duplicates.remove(idx);
                                         checked.remove(idx);
                                     }
                                 }
