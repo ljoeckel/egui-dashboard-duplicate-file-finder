@@ -185,7 +185,7 @@ pub fn duplicate_ui(
             .fg(TabColor::Custom(Color32::DARK_GRAY))
             .layout(Layout::centered_and_justified(Direction::TopDown))
             .show(ui, |ui, state| {
-                let tab_headers = vec!["Scanned Files", "Problems", "Duplicates"];
+                let tab_headers = vec!["Scanned", "Problems", "Duplicates"];
                 let tab_header = tab_headers[state.index() as usize];
                 let cnt;
                 if state.index() == 0 {

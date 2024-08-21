@@ -232,14 +232,12 @@ impl Tabs {
 
         // Paint a stroke around the tab-group
         let mut rect = ui.available_rect_before_wrap();
-        let gap = 1.0;
         ui.painter().rect_filled(rect, 0.0, Color32::from_rgb(170, 170, 170));
-        rect.set_height(rect.height() - gap);
-        rect.set_left(rect.left() + (gap / 2.0));
-        rect.set_top(rect.top() + (gap / 2.0));
 
+        rect.set_height(rect.height() - 1.0);
+        rect.set_top(rect.top() + 1.0);
         let cell_width = rect.width() / self.cols as f32;
-        rect.set_width(cell_width - (gap / 2.0));
+        rect.set_width(cell_width);
 
         let tabs_id = ui.id().with("tabs");
         let hover_id = tabs_id.with("hover");
@@ -283,19 +281,21 @@ impl Tabs {
                 selected = Some(ind);
                 if let Some(c) = self.selected_bg.color(ui.visuals()) {
                     let mut r = rect.clone();
-                    //r.set_top(r.top() - r.height() );
-                    r.set_top(r.top() - 3.0 );
-                    r.set_height(3.0);
-                    r.set_width(r.width());
-                    ui.painter().rect_stroke(r, 0.0, (2.0, Color32::LIGHT_GRAY));
+                    // paint stroke and round tab
+                    r.set_top(r.top() - 3.0);
+                    ui.painter().rect_stroke(r, 3.0, (1.0, ui.visuals().widgets.hovered.fg_stroke.color));
+                    r.set_top(r.top() + 1.0);
+                    r.set_bottom((r.bottom() + 1.0));
+                    ui.painter().rect_filled(r, 3.0, c);
+
+                    // paint lower rect without rounding
+                    r.set_top(r.top() + 4.0);
                     ui.painter().rect_filled(r, 0.0, c);
-                    ui.painter().rect_filled(rect, 0.0, c);
-                }
+              }
             } else if tab_state.is_hovered() {
                 hovered = Some(ind);
                 ui.ctx().set_cursor_icon(CursorIcon::PointingHand);
                 if let Some(c) = self.hover_bg.color(ui.visuals()) {
-                    ui.painter().rect_stroke(rect, 0.0, (2.0, ui.visuals().widgets.hovered.fg_stroke.color));
                     ui.painter().rect_filled(rect, 0.0, c);
                 }
             } else {
