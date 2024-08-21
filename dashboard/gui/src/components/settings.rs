@@ -53,7 +53,7 @@ impl SettingsUI {
 
                 // Zoom-Factor
                 sa.heading("Zoom factor");
-                let slider = egui::Slider::new(&mut state.zoom_factor, 0.4..=2.0).step_by(0.10);
+                let slider = egui::Slider::new(&mut state.zoom_factor, 0.7..=1.5).step_by(0.10);
                 if sa.add(slider).drag_stopped() {
                     ctx.set_zoom_factor(state.zoom_factor);
                 }

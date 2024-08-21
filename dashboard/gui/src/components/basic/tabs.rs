@@ -285,7 +285,7 @@ impl Tabs {
                     r.set_top(r.top() - 3.0);
                     ui.painter().rect_stroke(r, 3.0, (1.0, ui.visuals().widgets.hovered.fg_stroke.color));
                     r.set_top(r.top() + 1.0);
-                    r.set_bottom((r.bottom() + 1.0));
+                    r.set_bottom(r.bottom() + 1.0);
                     ui.painter().rect_filled(r, 3.0, c);
 
                     // paint lower rect without rounding

@@ -1,3 +1,4 @@
+use std::fmt::Debug;
 use std::rc::Rc;
 use std::sync::MutexGuard;
 use eframe::egui::{self, *};
@@ -6,12 +7,33 @@ use egui_aesthetix::Aesthetix;
 use egui_extras::{Column, TableBuilder};
 use egui_modal::*;
 
+const CHARS_PER_LINE: [(f32, f32, f32);9] = [
+    (0.7, 1216.0, 130.0),
+    (0.8, 1038.0, 116.0),
+    (0.9, 899.0, 98.0),
+    (1.0, 788.0, 81.0),
+    (1.1, 697.0, 73.0),
+    (1.2, 621.0, 61.0),
+    (1.3, 557.0, 54.0),
+    (1.4, 513.0, 47.0),
+    (1.5, 508.0, 42.0),
+];
+fn chars_per_line(zoom_factor: f32, available_width: f32) -> usize {
+    for (zf, width, cpl) in CHARS_PER_LINE.iter(){
+        if zf.eq(&zoom_factor) {
+            return ((available_width + 17.0*zoom_factor) / (width / cpl)) as usize;
+        }
+    }
+    82
+}
 
 pub fn mediatable(
     ui: &mut egui::Ui,
     active_theme: &Rc<dyn Aesthetix>,
     duplicates: &mut MutexGuard<Vec<String>>,
-    mut checked: MutexGuard<Vec<bool>>)
+    mut checked: MutexGuard<Vec<bool>>,
+    zoom_factor: f32
+)
 {
     // Create Modal Dialog
     let modal = Modal::new(ui.ctx(), "confirm_dialog");
@@ -22,9 +44,7 @@ pub fn mediatable(
         .size
         .max(ui.spacing().interact_size.y);
 
-    // Calulate number of chars per line for right bounded path
-    let font_id = egui::TextStyle::Body.resolve(ui.style());
-    let chars_per_line = (ui.available_width() / ui.fonts(|f| f.glyph_width(&font_id, 'W'))) as usize - 8;
+    let available_width = ui.available_width();
 
     TableBuilder::new(ui)
         .striped(true)
@@ -100,6 +120,7 @@ pub fn mediatable(
                     ui.checkbox(&mut checked[row_index], "");
                 });
                 row.col(|ui| {
+                    let chars_per_line = chars_per_line(zoom_factor, available_width);
                     // Show the nn right characters in the table
                     let s = &duplicates[row_index];
                     let len = utf8_slice::len(s);

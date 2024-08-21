@@ -162,6 +162,7 @@ impl eframe::App for Dashboard {
                             self.settings_state.media_groups.clone(),
                             &mut self.notification_bar,
                             &self.state.active_theme,
+                            self.state.zoom_factor,
                         );
                     }
 

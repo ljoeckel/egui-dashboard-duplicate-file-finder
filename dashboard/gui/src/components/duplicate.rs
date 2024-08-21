@@ -121,6 +121,7 @@ pub fn duplicate_ui(
     media_groups: Vec<MediaGroup>,
     notification_bar: &mut NotificationBar,
     active_theme: &Rc<dyn Aesthetix>,
+    zoom_factor: f32,
 ) {
     let is_scanning = dss.is_scanning();
     // Update the NotificationBar
@@ -226,7 +227,7 @@ pub fn duplicate_ui(
 
     if dss.current_tab == ShowTab::Duplicates {
         ui.vertical(|vert| {
-            duplicates_table::mediatable(vert, active_theme, &mut stack, checked);
+            duplicates_table::mediatable(vert, active_theme, &mut stack, checked, zoom_factor);
         }); // vert
     } else {
         scroll_area.show_rows(ui, row_height, stack.len(), |ui, row_range| {
