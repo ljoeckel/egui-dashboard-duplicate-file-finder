@@ -10,4 +10,4 @@ mod tabs;
 pub use button_group::button_group_clicked;
 pub use display_string::DisplayString;
 pub use modal::{modal, ModalResponse};
-pub use tabs::{Tabs, TabColor, TabResponse, TabState};
+pub use tabs::{Tabs, TabResponse, TabState};

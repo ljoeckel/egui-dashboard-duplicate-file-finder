@@ -32,7 +32,7 @@ pub fn mediatable(
     active_theme: &Rc<dyn Aesthetix>,
     duplicates: &mut MutexGuard<Vec<String>>,
     mut checked: MutexGuard<Vec<bool>>,
-    zoom_factor: f32
+    zoom_factor: f32,
 )
 {
     // Create Modal Dialog

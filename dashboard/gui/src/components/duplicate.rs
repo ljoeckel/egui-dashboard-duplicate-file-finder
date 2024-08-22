@@ -20,7 +20,6 @@ use egui_file_dialog::FileDialog;
 
 use crate::components::notifications::NotificationBar;
 use crate::components::{basic, duplicates_table};
-use crate::components::basic::TabColor;
 use basic::Tabs;
 
 const TAB_COLORS: [&[Color32]; 3] = [
@@ -85,6 +84,10 @@ impl DuplicateScannerUI {
         }
     }
 
+    fn have_results(&self) -> bool {
+        self.messenger.cntres() > 0 || self.messenger.cnterr() > 0 || self.messenger.cntstd() > 0
+    }
+
     fn get_tab_data(&self) -> (MutexGuard<Vec<String>>, MutexGuard<Vec<bool>>) {
         let stack: MutexGuard<Vec<String>>;
         match self.current_tab {
@@ -124,6 +127,8 @@ pub fn duplicate_ui(
     zoom_factor: f32,
 ) {
     let is_scanning = dss.is_scanning();
+    let have_results = dss.have_results();
+
     // Update the NotificationBar
     notification_bar.info(&dss.messenger.info());
 
@@ -174,16 +179,16 @@ pub fn duplicate_ui(
 
         ui.add_space(5.0);
 
-        let res = Tabs::new(3)
+        let res = Tabs::new(3, &ui.visuals(), have_results)
         .height(ui.text_style_height(&TextStyle::Button) * 1.4)
             .selected(0)
             //.selected_bg(TabColor::Custom(Color32::from_rgb(228,176,78)))
-            .selected_bg(TabColor::Custom(Color32::from_rgb(206,231,218)))
-            .selected_fg(TabColor::Custom(Color32::BLACK))
-            .hover_bg(TabColor::Custom(Color32::from_rgb(218,207,181)))
-            .hover_fg(TabColor::Custom(Color32::BLACK))
-            .bg(TabColor::Custom(Color32::from_rgb(226,221,213)))
-            .fg(TabColor::Custom(Color32::DARK_GRAY))
+            .selected_bg(Color32::from_rgb(206,231,218))
+            .selected_fg(Color32::BLACK)
+            .hover_bg(Color32::from_rgb(218,207,181))
+            .hover_fg(Color32::BLACK)
+            .bg(Color32::from_rgb(226,221,213))
+            .fg(Color32::DARK_GRAY)
             .layout(Layout::centered_and_justified(Direction::TopDown))
             .show(ui, |ui, state| {
                 let tab_headers = vec!["Scanned", "Problems", "Duplicates"];
@@ -198,7 +203,7 @@ pub fn duplicate_ui(
                 } else {
                     cnt = 0;
                 }
-                ui.add(egui::Label::new(format!("{} [{}]", tab_header, cnt)).selectable(false));
+                ui.add_enabled(have_results, egui::Label::new(format!("{} [{}]", tab_header, cnt)).selectable(false));
             });
 
         dss.set_tab(res.selected().unwrap());

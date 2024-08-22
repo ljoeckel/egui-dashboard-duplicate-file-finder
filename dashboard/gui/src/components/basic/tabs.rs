@@ -1,74 +1,20 @@
 // Based on https://github.com/damus-io/egui-tabs
 
-use eframe::egui::{vec2, Color32, CursorIcon, Layout, Sense, Direction};
+use eframe::egui::{vec2, Color32, CursorIcon, Layout, Sense};
 
 pub struct Tabs {
     cols: i32,
     height: f32,
     sense: Sense,
     layout: Layout,
-    clip: bool,
-    selected_bg: TabColor,
-    selected_fg: TabColor,
-    hover_bg: TabColor,
-    hover_fg: TabColor,
-    bg: TabColor,
-    fg: TabColor,
+    selected_bg: Color32,
+    selected_fg: Color32,
+    hover_bg: Color32,
+    hover_fg: Color32,
+    bg: Color32,
+    fg: Color32,
     selected: Option<i32>,
-}
-
-pub enum VisualsVariant {
-    HoverBackground,
-    HoverForeground,
-    SelectedBackground,
-    SelectedForeground,
-    Background,
-    Foreground,
-}
-
-pub enum TabColor {
-    Nothing,
-    VisualsDefault(VisualsVariant),
-    Custom(Color32),
-}
-
-impl TabColor {
-    pub fn custom(color: Color32) -> Self {
-        TabColor::Custom(color)
-    }
-
-    pub fn visuals(variant: VisualsVariant) -> Self {
-        TabColor::VisualsDefault(variant)
-    }
-
-    pub fn none() -> Self {
-        TabColor::Nothing
-    }
-
-    pub fn color(&self, visuals: &eframe::egui::Visuals) -> Option<Color32> {
-        match self {
-            TabColor::Nothing => None,
-            TabColor::VisualsDefault(VisualsVariant::HoverBackground) => {
-                Some(visuals.widgets.hovered.bg_fill)
-            }
-            TabColor::VisualsDefault(VisualsVariant::HoverForeground) => {
-                Some(visuals.widgets.hovered.fg_stroke.color)
-            }
-            TabColor::VisualsDefault(VisualsVariant::SelectedBackground) => {
-                Some(visuals.selection.bg_fill)
-            }
-            TabColor::VisualsDefault(VisualsVariant::SelectedForeground) => {
-                Some(visuals.selection.stroke.color)
-            }
-            TabColor::VisualsDefault(VisualsVariant::Background) => {
-                Some(visuals.widgets.active.bg_fill)
-            }
-            TabColor::VisualsDefault(VisualsVariant::Foreground) => {
-                Some(Color32::BLACK)
-            }
-            TabColor::Custom(c) => Some(*c),
-        }
-    }
+    enabled: bool,
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd)]
@@ -130,61 +76,49 @@ impl<T> TabResponse<T> {
 }
 
 impl Tabs {
-    pub fn new(cols: i32) -> Self {
-        let height = 20.0;
-        let sense = Sense::click();
-        let layout = Layout::centered_and_justified(Direction::BottomUp); //Layout::default();
-        let clip = false;
-        let hover_bg = TabColor::visuals(VisualsVariant::HoverBackground);
-        let hover_fg = TabColor::visuals(VisualsVariant::HoverForeground);
-        let selected_bg = TabColor::visuals(VisualsVariant::SelectedBackground);
-        let selected_fg = TabColor::visuals(VisualsVariant::SelectedForeground);
-        let bg = TabColor::visuals(VisualsVariant::Background);
-        let fg = TabColor::visuals(VisualsVariant::Foreground);
-        let selected: Option<i32> = None;
-
+    pub fn new(cols: i32, visuals: &eframe::egui::Visuals, enabled: bool) -> Self {
         Tabs {
             cols,
-            height,
-            sense,
-            layout,
-            clip,
-            selected_bg,
-            selected_fg,
-            hover_bg,
-            hover_fg,
-            bg,
-            fg,
-            selected,
+            enabled,
+            height: 20.0,
+            sense: Sense::click(),
+            layout: Layout::default(),
+            selected_bg: visuals.selection.bg_fill,
+            selected_fg: visuals.selection.stroke.color,
+            hover_bg: visuals.widgets.hovered.bg_fill,
+            hover_fg: visuals.widgets.hovered.fg_stroke.color,
+            bg: visuals.widgets.active.bg_fill,
+            fg: Color32::BLACK,
+            selected: None,
         }
     }
 
-    pub fn bg(mut self, bg: TabColor) -> Self {
+    pub fn bg(mut self, bg: Color32) -> Self {
         self.bg = bg;
         self
     }
 
-    pub fn fg(mut self, fg: TabColor) -> Self {
+    pub fn fg(mut self, fg: Color32) -> Self {
         self.fg = fg;
         self
     }
 
-    pub fn hover_bg(mut self, bg_fill: TabColor) -> Self {
+    pub fn hover_bg(mut self, bg_fill: Color32) -> Self {
         self.hover_bg = bg_fill;
         self
     }
 
-    pub fn hover_fg(mut self, hover_fg: TabColor) -> Self {
+    pub fn hover_fg(mut self, hover_fg: Color32) -> Self {
         self.hover_fg = hover_fg;
         self
     }
 
-    pub fn selected_fg(mut self, selected_fg: TabColor) -> Self {
+    pub fn selected_fg(mut self, selected_fg: Color32) -> Self {
         self.selected_fg = selected_fg;
         self
     }
 
-    pub fn selected_bg(mut self, bg_fill: TabColor) -> Self {
+    pub fn selected_bg(mut self, bg_fill: Color32) -> Self {
         self.selected_bg = bg_fill;
         self
     }
@@ -197,11 +131,6 @@ impl Tabs {
 
     pub fn sense(mut self, sense: Sense) -> Self {
         self.sense = sense;
-        self
-    }
-
-    pub fn clip(mut self, clip: bool) -> Self {
-        self.clip = clip;
         self
     }
 
@@ -275,79 +204,52 @@ impl Tabs {
                 hovered_tab,
             };
 
+            // preserve stroke line
             if ind == 0 { rect.set_left(rect.left() + 1.0) }
 
             if tab_state.is_selected() {
                 selected = Some(ind);
-                if let Some(c) = self.selected_bg.color(ui.visuals()) {
-                    let mut r = rect.clone();
+                let mut r = rect.clone();
+
+                if self.enabled {
                     // paint stroke and round tab
                     r.set_top(r.top() - 3.0);
                     ui.painter().rect_stroke(r, 3.0, (1.0, ui.visuals().widgets.hovered.fg_stroke.color));
                     r.set_top(r.top() + 1.0);
                     r.set_bottom(r.bottom() + 1.0);
-                    ui.painter().rect_filled(r, 3.0, c);
+                    ui.painter().rect_filled(r, 3.0, self.selected_bg);
 
                     // paint lower rect without rounding
                     r.set_top(r.top() + 4.0);
-                    ui.painter().rect_filled(r, 0.0, c);
-              }
+                    ui.painter().rect_filled(r, 0.0, self.selected_bg);
+                }
+
             } else if tab_state.is_hovered() {
-                hovered = Some(ind);
-                ui.ctx().set_cursor_icon(CursorIcon::PointingHand);
-                if let Some(c) = self.hover_bg.color(ui.visuals()) {
-                    ui.painter().rect_filled(rect, 0.0, c);
+                if self.enabled {
+                    hovered = Some(ind);
+                    ui.ctx().set_cursor_icon(CursorIcon::PointingHand);
+                    ui.painter().rect_filled(rect, 0.0, self.hover_bg);
                 }
             } else {
-                if let Some(c) = self.bg.color(ui.visuals()) {
-                    ui.painter().rect_filled(rect, 0.0, c);
+                if self.enabled {
+                    ui.painter().rect_filled(rect, 0.0, self.bg);
                 }
             }
 
-            let mut child_ui = ui.child_ui(rect, self.layout, None); // TODO: Check How to use ui.stack.info
-            if self.clip {
-                let margin = eframe::egui::Vec2::splat(ui.visuals().clip_rect_margin);
-                let margin = margin.min(0.5 * ui.spacing().item_spacing);
-                let clip_rect = rect.expand2(margin);
-                child_ui.set_clip_rect(clip_rect.intersect(child_ui.clip_rect()));
-            }
+            // set foreground colors
+            let mut child_ui = ui.child_ui(rect, self.layout, None);
 
-            // set foreground colors if we have them
-            if tab_state.is_selected() {
-                if let Some(c) = self.selected_fg.color(ui.visuals()) {
-                    child_ui.style_mut().visuals.override_text_color = Some(c);
-                }
-            } else if tab_state.is_hovered() {
-                if let Some(c) = self.hover_fg.color(ui.visuals()) {
-                    child_ui.style_mut().visuals.override_text_color = Some(c);
-                }
-            } else {
-                if let Some(c) = self.fg.color(ui.visuals()) {
-                    child_ui.style_mut().visuals.override_text_color = Some(c);
+            if self.enabled {
+                if tab_state.is_selected() {
+                    child_ui.style_mut().visuals.override_text_color = Some(self.selected_fg);
+                } else if tab_state.is_hovered() {
+                    child_ui.style_mut().visuals.override_text_color = Some(self.hover_fg);
+                } else {
+                    child_ui.style_mut().visuals.override_text_color = Some(self.fg);
                 }
             }
 
             let user_value = add_tab(&mut child_ui, tab_state);
-            /*
-            let child_rect = child_ui.min_rect();
-            let resp = child_ui.interact(child_rect, child_ui.id(), self.sense);
-
-            if resp.hovered() {
-                ui.painter()
-                    .rect_filled(child_rect, 0.0, egui::Color32::RED);
-                ui.ctx().set_cursor_icon(CursorIcon::PointingHand);
-                hovered = Some(ind);
-                any_hover = true;
-            }
-
-            if resp.clicked() {
-                ui.painter()
-                    .rect_filled(child_rect, 0.0, egui::Color32::BLUE);
-                selected = Some(ind);
-                ui.ctx().data_mut(|d| d.insert_temp(tabs_id, ind));
-            }
-            */
-
             inner.push(eframe::egui::InnerResponse::new(user_value, resp));
 
             rect = rect.translate(vec2(cell_width, 0.0))
