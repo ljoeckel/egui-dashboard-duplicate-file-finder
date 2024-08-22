@@ -207,11 +207,13 @@ impl Tabs {
             // preserve stroke line
             if ind == 0 { rect.set_left(rect.left() + 1.0) }
 
-            if tab_state.is_selected() {
-                selected = Some(ind);
-                let mut r = rect.clone();
+            let mut child_ui = ui.child_ui(rect, self.layout, None);
 
-                if self.enabled {
+            if self.enabled {
+                if tab_state.is_selected() {
+                    selected = Some(ind);
+                    let mut r = rect.clone();
+
                     // paint stroke and round tab
                     r.set_top(r.top() - 3.0);
                     ui.painter().rect_stroke(r, 3.0, (1.0, ui.visuals().widgets.hovered.fg_stroke.color));
@@ -222,24 +224,15 @@ impl Tabs {
                     // paint lower rect without rounding
                     r.set_top(r.top() + 4.0);
                     ui.painter().rect_filled(r, 0.0, self.selected_bg);
-                }
-
-            } else if tab_state.is_hovered() {
-                if self.enabled {
+                } else if tab_state.is_hovered() {
                     hovered = Some(ind);
                     ui.ctx().set_cursor_icon(CursorIcon::PointingHand);
                     ui.painter().rect_filled(rect, 0.0, self.hover_bg);
-                }
-            } else {
-                if self.enabled {
+                } else {
                     ui.painter().rect_filled(rect, 0.0, self.bg);
                 }
-            }
 
-            // set foreground colors
-            let mut child_ui = ui.child_ui(rect, self.layout, None);
-
-            if self.enabled {
+                // set foreground colors
                 if tab_state.is_selected() {
                     child_ui.style_mut().visuals.override_text_color = Some(self.selected_fg);
                 } else if tab_state.is_hovered() {
@@ -247,7 +240,7 @@ impl Tabs {
                 } else {
                     child_ui.style_mut().visuals.override_text_color = Some(self.fg);
                 }
-            }
+            } // if enabled
 
             let user_value = add_tab(&mut child_ui, tab_state);
             inner.push(eframe::egui::InnerResponse::new(user_value, resp));
