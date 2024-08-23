@@ -3,7 +3,6 @@
 mod button_group;
 mod display_string;
 mod modal;
-mod switch;
 pub mod font;
 mod tabs;
 

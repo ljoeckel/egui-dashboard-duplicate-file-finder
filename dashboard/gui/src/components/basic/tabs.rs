@@ -1,9 +1,9 @@
 // Based on https://github.com/damus-io/egui-tabs
 
-use eframe::egui::{vec2, Color32, CursorIcon, Layout, Sense};
+use eframe::egui::{vec2, Color32, CursorIcon, Layout, Direction, Sense};
 
 pub struct Tabs {
-    cols: i32,
+    cols: u8,
     height: f32,
     sense: Sense,
     layout: Layout,
@@ -13,15 +13,16 @@ pub struct Tabs {
     hover_fg: Color32,
     bg: Color32,
     fg: Color32,
-    selected: Option<i32>,
+    stroke_bg: Color32,
+    selected: u8,
     enabled: bool,
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd)]
 pub struct TabState {
-    ind: i32,
-    hovered_tab: i32,
-    selected_tab: i32,
+    ind: u8,
+    hovered_tab: u8,
+    selected_tab: u8,
 }
 
 impl TabState {
@@ -33,23 +34,15 @@ impl TabState {
         self.selected_tab == self.ind
     }
 
-    pub fn hovered_tab(&self) -> Option<i32> {
-        if self.hovered_tab < 0 {
-            None
-        } else {
-            Some(self.hovered_tab)
-        }
+    pub fn hovered_tab(&self) -> u8 {
+        self.hovered_tab
     }
 
-    pub fn selected_tab(&self) -> Option<i32> {
-        if self.selected_tab < 0 {
-            None
-        } else {
-            Some(self.selected_tab)
-        }
+    pub fn selected_tab(&self) -> u8 {
+        self.selected_tab
     }
 
-    pub fn index(&self) -> i32 {
+    pub fn index(&self) -> u8 {
         self.ind
     }
 }
@@ -57,16 +50,16 @@ impl TabState {
 #[derive(Default, Debug)]
 pub struct TabResponse<T> {
     inner: Vec<eframe::egui::InnerResponse<T>>,
-    hovered: Option<i32>,
-    selected: Option<i32>,
+    hovered: u8,
+    selected: u8,
 }
 
 impl<T> TabResponse<T> {
-    pub fn hovered(&self) -> Option<i32> {
+    pub fn hovered(&self) -> u8 {
         self.hovered
     }
 
-    pub fn selected(&self) -> Option<i32> {
+    pub fn selected(&self) -> u8 {
         self.selected
     }
 
@@ -76,20 +69,21 @@ impl<T> TabResponse<T> {
 }
 
 impl Tabs {
-    pub fn new(cols: i32, visuals: &eframe::egui::Visuals, enabled: bool) -> Self {
+    pub fn new(cols: u8, visuals: &eframe::egui::Visuals, enabled: bool) -> Self {
         Tabs {
-            cols,
+            cols: cols.min(254), // Allow only 254 tabs;
             enabled,
             height: 20.0,
             sense: Sense::click(),
-            layout: Layout::default(),
+            layout: Layout::centered_and_justified(Direction::LeftToRight),
             selected_bg: visuals.selection.bg_fill,
             selected_fg: visuals.selection.stroke.color,
             hover_bg: visuals.widgets.hovered.bg_fill,
             hover_fg: visuals.widgets.hovered.fg_stroke.color,
-            bg: visuals.widgets.active.bg_fill,
-            fg: Color32::BLACK,
-            selected: None,
+            bg: visuals.faint_bg_color,
+            fg: visuals.widgets.active.fg_stroke.color,
+            stroke_bg: Color32::from_rgb(170, 170, 170),
+            selected: 255,
         }
     }
 
@@ -100,6 +94,11 @@ impl Tabs {
 
     pub fn fg(mut self, fg: Color32) -> Self {
         self.fg = fg;
+        self
+    }
+
+    pub fn stroke_bg(mut self, stroke_bg: Color32) -> Self {
+        self.stroke_bg = stroke_bg;
         self
     }
 
@@ -124,8 +123,8 @@ impl Tabs {
     }
 
     /// The initial selection value
-    pub fn selected(mut self, selected: i32) -> Self {
-        self.selected = Some(selected);
+    pub fn selected(mut self, selected: u8) -> Self {
+        self.selected = selected;
         self
     }
 
@@ -151,17 +150,9 @@ impl Tabs {
     {
         let mut inner = Vec::with_capacity(self.cols as usize);
 
-        if self.cols == 0 {
-            return TabResponse {
-                selected: None,
-                hovered: None,
-                inner,
-            };
-        }
-
         // Paint a stroke around the tab-group
         let mut rect = ui.available_rect_before_wrap();
-        ui.painter().rect_filled(rect, 0.0, Color32::from_rgb(170, 170, 170));
+        ui.painter().rect_filled(rect, 0.0, self.stroke_bg);
 
         rect.set_height(rect.height() - 1.0);
         rect.set_top(rect.top() + 1.0);
@@ -170,32 +161,34 @@ impl Tabs {
 
         let tabs_id = ui.id().with("tabs");
         let hover_id = tabs_id.with("hover");
-        let mut any_hover = false;
 
-        let mut selected: Option<i32> = self.selected;
-        let mut hovered: Option<i32> = None;
+        let mut hovered = 255;
+        let mut selected = self.selected;
 
         for ind in 0..self.cols {
             let resp = ui.allocate_rect(rect, self.sense);
 
+            // Save / Restore selected/hovered from temp store
             let selected_tab = if resp.clicked() {
-                selected = Some(ind);
+                selected = ind;
                 ui.ctx().data_mut(|d| d.insert_temp(tabs_id, ind));
                 ind
             } else {
                 ui.ctx()
-                    .data(|d| d.get_temp::<i32>(tabs_id))
-                    .or(self.selected)
-                    .unwrap_or(-1)
+                    .data(|d| d.get_temp(tabs_id))
+                    .or(Some(self.selected))
+                    .unwrap_or(255)
             };
 
+            // Clear hover
+            ui.data_mut(|data| data.remove::<u8>(hover_id));
+            // Update hover if any
             let hovered_tab = if resp.hovered() {
-                any_hover = true;
-                hovered = Some(ind);
+                hovered = ind;
                 ui.ctx().data_mut(|d| d.insert_temp(hover_id, ind));
                 ind
             } else {
-                ui.ctx().data(|d| d.get_temp::<i32>(hover_id)).unwrap_or(-1)
+                ui.ctx().data(|d| d.get_temp(hover_id)).unwrap_or(255)
             };
 
             let tab_state = TabState {
@@ -204,6 +197,7 @@ impl Tabs {
                 hovered_tab,
             };
 
+            // Paint the rectangle
             // preserve stroke line
             if ind == 0 { rect.set_left(rect.left() + 1.0) }
 
@@ -211,7 +205,7 @@ impl Tabs {
 
             if self.enabled {
                 if tab_state.is_selected() {
-                    selected = Some(ind);
+                    selected = ind;
                     let mut r = rect.clone();
 
                     // paint stroke and round tab
@@ -225,7 +219,7 @@ impl Tabs {
                     r.set_top(r.top() + 4.0);
                     ui.painter().rect_filled(r, 0.0, self.selected_bg);
                 } else if tab_state.is_hovered() {
-                    hovered = Some(ind);
+                    hovered = ind;
                     ui.ctx().set_cursor_icon(CursorIcon::PointingHand);
                     ui.painter().rect_filled(rect, 0.0, self.hover_bg);
                 } else {
@@ -242,15 +236,11 @@ impl Tabs {
                 }
             } // if enabled
 
+            // Call code parent and run show() method (i.e. add Label
             let user_value = add_tab(&mut child_ui, tab_state);
             inner.push(eframe::egui::InnerResponse::new(user_value, resp));
 
             rect = rect.translate(vec2(cell_width, 0.0))
-        }
-
-        if !any_hover {
-            ui.data_mut(|data| data.remove::<i32>(hover_id));
-            hovered = None;
         }
 
         TabResponse {

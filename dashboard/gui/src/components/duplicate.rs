@@ -3,6 +3,7 @@ use crate::scanner::messenger::Messenger;
 use crate::scanner::scanner::scan;
 
 use std::{
+    fs::remove_file,
     path::Path,
     sync::MutexGuard,
     thread::{self},
@@ -11,7 +12,7 @@ use std::{
 };
 use std::rc::Rc;
 use eframe::egui;
-use eframe::egui::{Layout, Direction, Color32, Label, RichText, ScrollArea, TextStyle};
+use eframe::egui::{Color32, Label, RichText, ScrollArea, TextStyle};
 use egui::scroll_area::ScrollBarVisibility;
 use egui::{epaint::text::TextWrapMode, Ui};
 
@@ -35,7 +36,7 @@ enum ShowTab {
     Duplicates,
 }
 impl ShowTab {
-    pub fn from(tab_idx: i32) -> Self {
+    pub fn from(tab_idx: u8) -> Self {
         match tab_idx {
             0 => ShowTab::Scanned,
             1 => ShowTab::Errors,
@@ -68,7 +69,7 @@ impl DuplicateScannerUI {
         }
     }
 
-    pub fn set_tab(&mut self, tab: i32) {
+    pub fn set_tab(&mut self, tab: u8) {
         self.current_tab = ShowTab::from(tab);
     }
 
@@ -182,15 +183,14 @@ pub fn duplicate_ui(
         let res = Tabs::new(3, &ui.visuals(), have_results)
         .height(ui.text_style_height(&TextStyle::Button) * 1.4)
             .selected(0)
-            //.selected_bg(TabColor::Custom(Color32::from_rgb(228,176,78)))
             .selected_bg(Color32::from_rgb(206,231,218))
             .selected_fg(Color32::BLACK)
             .hover_bg(Color32::from_rgb(218,207,181))
             .hover_fg(Color32::BLACK)
             .bg(Color32::from_rgb(226,221,213))
             .fg(Color32::DARK_GRAY)
-            .layout(Layout::centered_and_justified(Direction::TopDown))
             .show(ui, |ui, state| {
+                // the add_tab method
                 let tab_headers = vec!["Scanned", "Problems", "Duplicates"];
                 let tab_header = tab_headers[state.index() as usize];
                 let cnt;
@@ -206,8 +206,7 @@ pub fn duplicate_ui(
                 ui.add_enabled(have_results, egui::Label::new(format!("{} [{}]", tab_header, cnt)).selectable(false));
             });
 
-        dss.set_tab(res.selected().unwrap());
-
+        dss.set_tab(res.selected()); // Set ShowTab::xxx
     });
 
     // Open FileDialog

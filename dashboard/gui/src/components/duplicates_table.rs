@@ -1,4 +1,3 @@
-use std::fmt::Debug;
 use std::rc::Rc;
 use std::sync::MutexGuard;
 use eframe::egui::{self, *};
