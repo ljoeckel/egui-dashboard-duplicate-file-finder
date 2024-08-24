@@ -4,9 +4,9 @@ mod button_group;
 mod display_string;
 mod modal;
 pub mod font;
-mod tabs;
+mod tabbar;
 
 pub use button_group::button_group_clicked;
 pub use display_string::DisplayString;
 pub use modal::{modal, ModalResponse};
-pub use tabs::{Tabs, TabResponse, TabState};
+pub use tabbar::{TabBar};

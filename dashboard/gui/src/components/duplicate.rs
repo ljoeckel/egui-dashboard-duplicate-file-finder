@@ -21,12 +21,12 @@ use egui_file_dialog::FileDialog;
 
 use crate::components::notifications::NotificationBar;
 use crate::components::{basic, duplicates_table};
-use basic::Tabs;
+use basic::TabBar;
 
 const TAB_COLORS: [&[Color32]; 3] = [
-        &[Color32::DARK_BLUE, Color32::LIGHT_BLUE],
-        &[Color32::DARK_RED, Color32::LIGHT_RED],
-        &[Color32::DARK_GREEN, Color32::LIGHT_GREEN],
+    &[Color32::DARK_BLUE, Color32::LIGHT_BLUE],
+    &[Color32::DARK_RED, Color32::LIGHT_RED],
+    &[Color32::DARK_GREEN, Color32::LIGHT_GREEN],
 ];
 
 #[derive(PartialEq, Copy, Clone)]
@@ -36,7 +36,7 @@ enum ShowTab {
     Duplicates,
 }
 impl ShowTab {
-    pub fn from(tab_idx: u8) -> Self {
+    pub fn from(tab_idx: usize) -> Self {
         match tab_idx {
             0 => ShowTab::Scanned,
             1 => ShowTab::Errors,
@@ -44,12 +44,12 @@ impl ShowTab {
         }
     }
     pub fn index(&self) -> usize {
-        *self  as usize
+        *self as usize
     }
 }
 
 pub struct DuplicateScannerUI {
-    current_tab: ShowTab,
+    selected_tab: usize,
     path: String,
     file_dialog: FileDialog,
     messenger: Messenger,
@@ -60,17 +60,13 @@ pub struct DuplicateScannerUI {
 impl DuplicateScannerUI {
     pub fn new() -> Self {
         Self {
-            current_tab: ShowTab::Scanned,
+            selected_tab: 0, // select first tab as default
             path: String::new(),
             file_dialog: FileDialog::new(),
             messenger: Messenger::new(),
             scanning: false,
             handle: None,
         }
-    }
-
-    pub fn set_tab(&mut self, tab: u8) {
-        self.current_tab = ShowTab::from(tab);
     }
 
     fn clear(&mut self) {
@@ -91,7 +87,7 @@ impl DuplicateScannerUI {
 
     fn get_tab_data(&self) -> (MutexGuard<Vec<String>>, MutexGuard<Vec<bool>>) {
         let stack: MutexGuard<Vec<String>>;
-        match self.current_tab {
+        match ShowTab::from(self.selected_tab)  {
             ShowTab::Scanned => {
                 stack = self.messenger.stdlog();
             }
@@ -106,14 +102,12 @@ impl DuplicateScannerUI {
     }
 
     fn get_tab_color(&self, ui: &Ui) -> Color32 {
-        let color_idx = self.current_tab.index();
         let mut dark_idx = 0;
         if ui.visuals().dark_mode {
             dark_idx = 1;
         }
-        TAB_COLORS[color_idx][dark_idx]
+        TAB_COLORS[self.selected_tab][dark_idx]
     }
-
 }
 
 
@@ -180,33 +174,21 @@ pub fn duplicate_ui(
 
         ui.add_space(5.0);
 
-        let res = Tabs::new(3, &ui.visuals(), have_results)
-        .height(ui.text_style_height(&TextStyle::Button) * 1.4)
-            .selected(0)
-            .selected_bg(Color32::from_rgb(206,231,218))
-            .selected_fg(Color32::BLACK)
-            .hover_bg(Color32::from_rgb(218,207,181))
-            .hover_fg(Color32::BLACK)
-            .bg(Color32::from_rgb(226,221,213))
-            .fg(Color32::DARK_GRAY)
-            .show(ui, |ui, state| {
-                // the add_tab method
-                let tab_headers = vec!["Scanned", "Problems", "Duplicates"];
-                let tab_header = tab_headers[state.index() as usize];
-                let cnt;
-                if state.index() == 0 {
-                    cnt = dss.messenger.cntstd();
-                } else if state.index() == 1 {
-                    cnt = dss.messenger.cnterr();
-                } else if state.index() == 2 {
-                    cnt = dss.messenger.cntres();
-                } else {
-                    cnt = 0;
-                }
-                ui.add_enabled(have_results, egui::Label::new(format!("{} [{}]", tab_header, cnt)).selectable(false));
-            });
+        // Add the TabBar
+        let mut cols: Vec<String> = Vec::with_capacity(3);
+        cols.push(format!("{} [{}]", "Scanned", dss.messenger.cntstd()));
+        cols.push(format!("{} [{}]", "Problems", dss.messenger.cnterr()));
+        cols.push(format!("{} [{}]", "Duplicates", dss.messenger.cntres()));
 
-        dss.set_tab(res.selected()); // Set ShowTab::xxx
+        ui.add_enabled(have_results, TabBar::new(cols, &mut dss.selected_tab, &ui.visuals())
+            .selected_bg(Color32::from_rgb(206, 231, 218))
+            .selected_fg(Color32::BLACK)
+            .selected_bg(Color32::LIGHT_BLUE)
+            .hover_bg(Color32::from_rgb(218, 207, 181))
+            .hover_fg(Color32::BLACK)
+            .bg(Color32::from_rgb(226, 221, 213))
+            .fg(Color32::DARK_GRAY),
+        );
     });
 
     // Open FileDialog
@@ -229,7 +211,7 @@ pub fn duplicate_ui(
     let (mut stack, checked) = dss.get_tab_data();
     let color = dss.get_tab_color(&ui);
 
-    if dss.current_tab == ShowTab::Duplicates {
+    if ShowTab::from(dss.selected_tab) == ShowTab::Duplicates {
         ui.vertical(|vert| {
             duplicates_table::mediatable(vert, active_theme, &mut stack, checked, zoom_factor);
         }); // vert
