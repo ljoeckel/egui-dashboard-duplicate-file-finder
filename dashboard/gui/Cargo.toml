@@ -26,6 +26,7 @@ egui-file-dialog = "0.6"
 egui-modal = "0.4.0"
 walkdir = "2"
 utf8_slice = "1.0"
+egui_comps = { git = "https://github.com/ljoeckel/egui-comps.git" }
 
 [[bin]]
 name = "dashboard_gui"

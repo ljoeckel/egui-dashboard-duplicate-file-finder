@@ -897,6 +897,7 @@ dependencies = [
  "egui-aesthetix-lj",
  "egui-file-dialog",
  "egui-modal",
+ "egui_comps",
  "egui_extras",
  "env_logger",
  "utf8_slice",
@@ -1101,6 +1102,15 @@ dependencies = [
  "web-time",
  "webbrowser",
  "winit",
+]
+
+[[package]]
+name = "egui_comps"
+version = "0.1.0"
+source = "git+https://github.com/ljoeckel/egui-comps.git#4552ef03c40a1793b238dfa020e8db8ad2b6488c"
+dependencies = [
+ "eframe",
+ "egui",
 ]
 
 [[package]]

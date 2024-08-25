@@ -20,8 +20,8 @@ use egui_aesthetix::Aesthetix;
 use egui_file_dialog::FileDialog;
 
 use crate::components::notifications::NotificationBar;
-use crate::components::{basic, duplicates_table};
-use basic::TabBar;
+use crate::components::{duplicates_table};
+use egui_comps::tabbar::TabBar;
 
 const TAB_COLORS: [&[Color32]; 3] = [
     &[Color32::DARK_BLUE, Color32::LIGHT_BLUE],
@@ -43,6 +43,8 @@ impl ShowTab {
             _ => ShowTab::Duplicates,
         }
     }
+
+    #[allow(dead_code)]
     pub fn index(&self) -> usize {
         *self as usize
     }
@@ -187,7 +189,8 @@ pub fn duplicate_ui(
             .hover_bg(Color32::from_rgb(218, 207, 181))
             .hover_fg(Color32::BLACK)
             .bg(Color32::from_rgb(226, 221, 213))
-            .fg(Color32::DARK_GRAY),
+            .fg(Color32::DARK_GRAY)
+            .underline(dss.messenger.cntres() > 0)
         );
     });
 
