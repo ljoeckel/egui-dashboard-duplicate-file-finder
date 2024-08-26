@@ -2,9 +2,7 @@
 
 mod button_group;
 mod display_string;
-mod modal;
 pub mod font;
 
 pub use button_group::button_group_clicked;
 pub use display_string::DisplayString;
-pub use modal::{modal, ModalResponse};
