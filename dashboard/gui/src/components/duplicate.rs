@@ -183,14 +183,12 @@ pub fn duplicate_ui(
         cols.push(format!("{} [{}]", "Duplicates", dss.messenger.cntres()));
 
         ui.add_enabled(have_results, TabBar::new(cols, &mut dss.selected_tab, &ui.visuals())
-            .selected_bg(Color32::from_rgb(206, 231, 218))
+            .selected_bg(Color32::from_rgb(254,250,238))
             .selected_fg(Color32::BLACK)
-            .selected_bg(Color32::LIGHT_BLUE)
             .hover_bg(Color32::from_rgb(218, 207, 181))
             .hover_fg(Color32::BLACK)
             .bg(Color32::from_rgb(226, 221, 213))
             .fg(Color32::DARK_GRAY)
-            .underline(dss.messenger.cntres() > 0)
         );
     });
 
