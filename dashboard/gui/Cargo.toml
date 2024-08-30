@@ -27,6 +27,7 @@ egui-modal = "0.4.0"
 walkdir = "2"
 utf8_slice = "1.0"
 egui_comps = { git = "https://github.com/ljoeckel/egui-comps.git" }
+lofty = "0.21"
 
 [[bin]]
 name = "dashboard_gui"

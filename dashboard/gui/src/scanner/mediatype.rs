@@ -1,19 +1,22 @@
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Copy, Clone)]
 pub enum ScanType {
     BINARY,
     METADATA,
 }
+
 #[derive(Debug)]
 pub enum Control {
     STOP,
     INFO,
 }
+
 #[derive(Debug, Clone)]
 pub struct MediaGroup {
     pub name: String,
     pub media_types: Vec<MediaType>,
     pub selected: bool,
 }
+
 impl MediaGroup {
     fn new(name: &str, mut media_types: Vec<MediaType>, selected: bool) -> Self {
         // Setup selected for mediatypes
@@ -193,27 +196,27 @@ fn development_types() -> Vec<MediaType> {
 fn ignore_types() -> Vec<MediaType> {
     vec![
         MediaType::new("._", "Files with this extension will be ignored"),
-        MediaType::new(".A", "Binary Archive file"),
-        MediaType::new(".BAK", "Files with this extension will be ignored"),
-        MediaType::new(".BIN", "Files with this extension will be ignored"),
-        MediaType::new(".DS_STORE", "Files with this extension will be ignored"),
-        MediaType::new(".DS_SSTORE", "Files with this extension will be ignored"),
-        MediaType::new(".GITIGNORE", "Files with this extension will be ignored"),
-        MediaType::new(".IDX", "Files with this extension will be ignored"),
-        MediaType::new(".LOCK", "Files with this extension will be ignored"),
-        MediaType::new(".LOG", "Files with this extension will be ignored"),
-        MediaType::new(".M3U", "Files with this extension will be ignored"),
-        MediaType::new(".MF", "Files with this extension will be ignored"),
-        MediaType::new(".NFO", "Files with this extension will be ignored"),
-        MediaType::new(".O", "Files with this extension will be ignored"),
-        MediaType::new(".RLIB", "Files with this extension will be ignored"),
-        MediaType::new(".RMETA", "Files with this extension will be ignored"),
-        MediaType::new(".RTF", "Files with this extension will be ignored"),
-        MediaType::new(".SFV", "Files with this extension will be ignored"),
-        MediaType::new(".SO", "Binary Shared Object file"),
-        MediaType::new(".TIMESTAMP", "Files with this extension will be ignored"),
-        MediaType::new(".URL", "Files with this extension will be ignored"),
-        MediaType::new(".WPL", "Files with this extension will be ignored"),
+        MediaType::new(".a", "Binary Archive file"),
+        MediaType::new(".bak", "Files with this extension will be ignored"),
+        MediaType::new(".bin", "Files with this extension will be ignored"),
+        MediaType::new(".ds_store", "Files with this extension will be ignored"),
+        MediaType::new(".ds_sstore", "Files with this extension will be ignored"),
+        MediaType::new(".gitignore", "Files with this extension will be ignored"),
+        MediaType::new(".idx", "Files with this extension will be ignored"),
+        MediaType::new(".lock", "Files with this extension will be ignored"),
+        MediaType::new(".log", "Files with this extension will be ignored"),
+        MediaType::new(".m3u", "Files with this extension will be ignored"),
+        MediaType::new(".mf", "Files with this extension will be ignored"),
+        MediaType::new(".nfo", "Files with this extension will be ignored"),
+        MediaType::new(".o", "Files with this extension will be ignored"),
+        MediaType::new(".rlib", "Files with this extension will be ignored"),
+        MediaType::new(".rmeta", "Files with this extension will be ignored"),
+        MediaType::new(".rtf", "Files with this extension will be ignored"),
+        MediaType::new(".sfv", "Files with this extension will be ignored"),
+        MediaType::new(".so", "Binary Shared Object file"),
+        MediaType::new(".timestamp", "Files with this extension will be ignored"),
+        MediaType::new(".url", "Files with this extension will be ignored"),
+        MediaType::new(".wpl", "Files with this extension will be ignored"),
         MediaType::new(".zotero-ft-cache", "Zotero file"),
         MediaType::new(".zotero-ft-info", "Zotero file"),
     ]

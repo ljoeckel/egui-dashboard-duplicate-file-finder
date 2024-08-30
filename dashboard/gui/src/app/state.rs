@@ -42,7 +42,7 @@ impl ApplicationState {
             settings_window_open: false,
             inspector_window_open: false,
             memory_window_open: false,
-            zoom_factor: 1.1,
+            zoom_factor: 1.0,
         }
     }
 }
