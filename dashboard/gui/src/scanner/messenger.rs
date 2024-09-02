@@ -43,9 +43,21 @@ impl Messenger {
         self.set_progress(0, 0, "");
     }
 
+    pub fn interrupt(&self) {
+        *self.scanner_control.lock().unwrap() = Control::INTERRUPT;
+        self.set_progress(0, 0, "");
+    }
+
     pub fn is_stopped(&self) -> bool {
         match *self.scanner_control.lock().unwrap() {
             Control::STOP => true,
+            _ => false,
+        }
+    }
+
+    pub fn is_interrupted(&self) -> bool {
+        match *self.scanner_control.lock().unwrap() {
+            Control::INTERRUPT => true,
             _ => false,
         }
     }

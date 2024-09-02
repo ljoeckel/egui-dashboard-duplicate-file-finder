@@ -168,6 +168,7 @@ pub fn duplicate_ui(
                         ui.selectable_value(&mut dss.scan_type, ScanType::METADATA, "Metadata");
                     });
 
+                // Scan / Abort Buttons
                 ui.with_layout(Layout::right_to_left(Align::Center), |ui| {
                     // Abort
                     if ui.add_enabled(
@@ -177,6 +178,18 @@ pub fn duplicate_ui(
                             .stroke(Stroke::new(1.0, Color32::LIGHT_RED)))
                         .clicked() {
                         dss.messenger.stop();
+                    }
+
+                    ui.add_space(5.0);
+
+                    // Break
+                    if ui.add_enabled(
+                        is_scanning,
+                        Button::new("Interrupt")
+                            .min_size(Vec2::new(80.0, BUTTON_HEIGHT))
+                            .stroke(Stroke::new(1.0, Color32::LIGHT_RED)))
+                        .clicked() {
+                        dss.messenger.interrupt();
                     }
 
                     ui.add_space(5.0);
@@ -205,7 +218,6 @@ pub fn duplicate_ui(
 
     ui.add_space(15.0);
 
-    // Scan / Abort Buttons
     // Add the TabBar
     let cols: Vec<String> = vec! {
         format!("Scanned [{}]", dss.messenger.cntstd()),
@@ -230,10 +242,6 @@ pub fn duplicate_ui(
         }
         _ => ()
     }
-    // match dss.file_dialog.update(ctx).selected() {
-    //     Some(path) => dss.path = path.to_str().unwrap_or("").to_string().clone(),
-    //     _ => (),
-    // }
 
     // Scroll-Area LOG
     let row_height = ui.text_style_height(&TextStyle::Monospace);

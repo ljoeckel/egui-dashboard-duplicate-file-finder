@@ -1,5 +1,7 @@
 use crate::scanner::mediatype::{MediaGroup, ScanType};
 use crate::scanner::messenger::Messenger;
+use crate::components::basic::file_utils::*;
+use crate::components::basic::lofty_utils::*;
 
 use std::{
     collections::{HashMap, HashSet},
@@ -7,69 +9,17 @@ use std::{
     io::{BufReader, Read, Write},
     path::Path,
 };
+use std::fmt::Pointer;
 use std::time::Duration;
-use lofty::file::TaggedFile;
 use walkdir::{DirEntry, WalkDir};
-
-use lofty::prelude::*;
-use lofty::read_from_path;
-use lofty::probe::Probe;
-use lofty::properties::{ChannelMask, FileProperties};
-use lofty::tag::{Tag, TagType};
+use crate::components::basic::string_utils::normalize_option;
 
 const BUF_SIZE: usize = 256;
 
+
 const SCRIPT_NAME: &str = "./duplicates.log";
 
-fn unwrap_opt<T>(optional: Option<T>) {}
 fn human_duration(duration: Duration) {}
-fn list_audio_properties(tagged_file: &TaggedFile) {
-    //fn list_audio_properties(properties: &FileProperties) {
-    let properties = tagged_file.properties();
-    let sample_rate = properties.sample_rate().unwrap_or(0);
-    let channels = properties.channels().unwrap_or(0);
-    let channel_mask = properties.channel_mask().unwrap_or_default();
-    let duration = properties.duration();
-    let audio_bitrate = properties.audio_bitrate().unwrap_or(0);
-    let overall_bitrate = properties.overall_bitrate().unwrap_or(0);
-    let bit_depth = properties.bit_depth().unwrap_or(0);
-
-    println!("sample_rate: {:?}, channels: {:?}, channel_mask: {:?}, duration: {:?}, audio_bitrate: {:?}, overall_bitrarte: {:?}, bit_depth: {:?}",
-             sample_rate, channels, channel_mask, duration, audio_bitrate, overall_bitrate, bit_depth);
-}
-fn _audio_key(tag: &Tag) -> String {
-    let key = format!("{}{}{}",
-                      tag.artist().unwrap_or("".into()),
-                      tag.album().unwrap_or("".into()),
-                      tag.title().unwrap_or("".into())
-    );
-    key.to_lowercase()
-    // println!("Artist: {:?} - Comment: {:?}", tag.artist(), tag.comment());
-    // println!("  Album: {:?} (Disc {:?} of {:?}, Genre: {:?} Year: {:?}", tag.album(), tag.disk(), tag.disk_total(), tag.genre(), tag.year());
-    // println!("     # {:?} / {:?}  Title: {:?}", tag.track(), tag.track_total(), tag.title());
-}
-
-fn audio_key(fi: &FileInfo, messenger: &Messenger) -> String {
-    match Probe::open(fi.path()) {
-        Ok(probe) => {
-            match probe.read() {
-                Ok(tagged_file) => {
-                    // Extract the Tag from the file if any
-                    if let Some(tag) = tagged_file.primary_tag() {
-                        //list_audio_properties(&tagged_file);
-                        return _audio_key(tag);
-                    } else {
-                        messenger.push_errlog(format!("No primary tag for file {:?}", fi.path()));
-                        //return "".to_string();
-                    }
-                }
-                Err(e) => messenger.push_errlog(format!("{} for file {}", e, fi.path()))
-            }
-        }
-        Err(e) => messenger.push_errlog(format!("{:?}, open file {:?}", e, fi.path()))
-    }
-    "".to_string()
-}
 
 
 pub fn scan(path: &Path, scan_type: ScanType, media_groups: Vec<MediaGroup>, messenger: Messenger) {
@@ -122,51 +72,51 @@ fn walk_dir(
         .filter_map(Result::ok)
         .filter(|e| !e.path().is_dir())
     {
-        if messenger.is_stopped() {
+        if messenger.is_stopped() || messenger.is_interrupted() {
             break;
         }
 
         match entry.metadata() {
             Ok(metadata) => {
                 let file_info = FileInfo::new(entry.clone());
-                let path = file_info.path();
-                let extension = &get_extension(&file_info.path());
+                let path = file_info.path_to_string();
+                let extension = get_extension(&file_info.path_to_string());
 
                 // If unknown extension then log in error
-                if !media_groups.iter().any(|mg| mg.is_known_extension(extension)) {
+                if !media_groups.iter().any(|mg| mg.is_known_extension(&extension)) {
                     messenger.push_errlog(format!("Unknown extension {}", path));
                     continue;
                 }
                 // Known extension and selected?
-                if !media_groups.iter().any(|mg| mg.is_selected(extension)) {
+                if !media_groups.iter().any(|mg| mg.is_selected(&extension)) {
                     continue;
                 }
 
-                let key: String;
+                messenger.push_stdlog(format!("{}", file_info.path_to_string()));
+
+                let mut key: String = String::new();
                 match scan_type {
                     ScanType::BINARY => {
                         key = file_info.get_key(metadata.len());
-                    }
+                    } // binary
                     ScanType::METADATA => {
-                        key = audio_key(&file_info, messenger);
-                        if key.is_empty() {
-                            messenger.push_errlog(format!("Empty tags for file {}", &file_info.path()));
+                        let map = get_audio_tags(&file_info.path());
+                        let duration: usize = map.get("Duration").unwrap_or(&"0".to_string()).parse().unwrap();
+                        let track_title = normalize_option(map.get("TrackTitle"));
+
+                        if duration == 0 || track_title.is_empty() {
+                            messenger.push_errlog(format!("No Duration '{}' or TrackTitle '{}' for {}", duration, track_title, file_info.path_to_string()));
                             continue;
                         }
-                    }
-                }
-                // update messenger
-                messenger.push_stdlog(format!("key: {}, path:{}", key, &file_info.path()));
+                        key = format!("{}{}", duration, track_title);
+                    } // metadata
+                } // match ScanType
+
                 // Add key to list
+                messenger.push_stdlog(format!("key: {}", &key));
                 let entries = fileinfo_map.entry(key).or_insert(Vec::new());
                 entries.push(file_info);
-
-                // messenger.push_stdlog(file_info.path());
-                // // Add key to list
-                // let entries = fileinfo_map.entry(key).or_insert(Vec::new());
-                // entries.push(file_info);
-
-            }
+            } // (Ok) metadata
             Err(e) => {
                 messenger.push_errlog(format!("Error={}", e));
             }
@@ -195,7 +145,7 @@ fn calc_checksum(map: &mut HashMap<String, Vec<FileInfo>>, messenger: &Messenger
 
         if item.len() > 1 {
             for fi in item.into_iter() {
-                fi.checksum = get_header_checksum(&fi.path());
+                fi.checksum = get_header_checksum(&fi.path_to_string());
             }
         }
     }
@@ -218,7 +168,7 @@ fn check_for_duplicates(
         count += 1;
         messenger.set_progress(len, count, "Check for duplicates...");
         if !key.is_empty() {
-            for dup in find_duplicates(&scan_type, &file_infos) {
+            for dup in find_duplicates(&scan_type, &file_infos, &messenger) {
                 duplicates.push(dup.clone());
                 messenger.push_reslog(dup);
             }
@@ -227,7 +177,7 @@ fn check_for_duplicates(
     duplicates
 }
 
-fn find_duplicates(scan_type: &ScanType, file_infos: &Vec<FileInfo>) -> HashSet<String> {
+fn find_duplicates(scan_type: &ScanType, file_infos: &Vec<FileInfo>, messenger: &Messenger) -> HashSet<String> {
     let mut duplicates: HashSet<String> = HashSet::new();
 
     for i in 0..file_infos.len() - 1 {
@@ -238,20 +188,27 @@ fn find_duplicates(scan_type: &ScanType, file_infos: &Vec<FileInfo>) -> HashSet<
 
             match scan_type {
                 ScanType::BINARY => {
-                    // compare files with identical len
+                    // compare files with identical headers
                     if file_info1.checksum - file_info2.checksum == 0 {
-                        insert = get_file_checksum(&file_info1.path()) == get_file_checksum(&file_info2.path());
+                        let checksum1 = compute_file_checksum(file_info1.path()).unwrap();
+                        let checksum2 = compute_file_checksum(file_info1.path()).unwrap();
+                        insert = checksum1 == checksum2;
                     }
                 }
                 ScanType::METADATA => {
-                    //(&file_info1);
-                    ()
+                    let key1 = get_audio_key(&get_audio_tags(file_info1.path()));
+                    let key2 = get_audio_key(&get_audio_tags(file_info2.path()));
+                    insert = key1 == key2;
                 }
             };
 
             if insert {
-                duplicates.insert(file_info1.path());
-                duplicates.insert(file_info2.path());
+                duplicates.insert(file_info1.path_to_string());
+                duplicates.insert(file_info2.path_to_string());
+            }
+
+            if messenger.is_stopped() {
+                break;
             }
         }
     }
@@ -288,31 +245,6 @@ fn get_header_checksum(path: &str) -> isize {
     checksum
 }
 
-/// Reads all bytes from a file calculate an isize checksum.
-///
-/// Returns the isize checksum
-fn get_file_checksum(path: &str) -> isize {
-    let mut file = match File::open(path) {
-        Ok(f) => f,
-        Err(e) => {
-            eprintln!("Error: {}, path={}", e, path);
-            return 0;
-        }
-    };
-
-    //let mut contents: Vec<u8> = Vec::new();
-    let mut contents: Vec<u8> = Vec::new();
-    if let Err(e) = file.read_to_end(&mut contents) {
-        eprintln!("Could not read file! Error: {}, path={}", e, path);
-        return 0;
-    } else {
-        let mut checksum: isize = 0;
-        for b in contents.into_iter() {
-            checksum += b as isize;
-        }
-        checksum
-    }
-}
 
 fn create_bash_script(
     duplicates: &Vec<String>,
@@ -330,14 +262,6 @@ fn create_bash_script(
     }
 }
 
-pub fn get_extension(path: &str) -> String {
-    let extension = match path.rfind('.') {
-        Some(idx) => (&path[idx..].to_uppercase()).to_owned(),
-        None => String::new(),
-    };
-    extension
-}
-
 #[derive(Debug)]
 struct FileInfo {
     dir_entry: DirEntry,
@@ -352,11 +276,15 @@ impl FileInfo {
     }
 
     /// Returns the String representation of file's path
-    pub fn path(&self) -> String {
+    pub fn path_to_string(&self) -> String {
         match self.dir_entry.path().to_str() {
             Some(s) => s.to_owned(),
             None => String::new(),
         }
+    }
+
+    pub fn path(&self) -> &Path {
+        self.dir_entry.path()
     }
 
     /// Returns a String as key for the hashmap.
@@ -364,7 +292,7 @@ impl FileInfo {
     /// Key is build by combining the file length with the extension.
     /// If no extension is found, then only the file length will be used as key
     pub fn get_key(&self, length: u64) -> String {
-        let path = self.path();
+        let path = self.path_to_string();
         let key = match path.rfind('.') {
             Some(idx) => format!("{}{}", length, &path[idx..].to_uppercase()),
             None => format!("{}", length),

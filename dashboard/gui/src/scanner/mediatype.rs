@@ -7,6 +7,7 @@ pub enum ScanType {
 #[derive(Debug)]
 pub enum Control {
     STOP,
+    INTERRUPT,
     INFO,
 }
 
