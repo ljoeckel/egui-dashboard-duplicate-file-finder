@@ -3,7 +3,6 @@ use crate::scanner::messenger::Messenger;
 use crate::scanner::scanner::scan;
 
 use std::{
-    fs::remove_file,
     path::Path,
     sync::MutexGuard,
     thread::{self},
@@ -11,7 +10,7 @@ use std::{
     vec::Vec,
 };
 use std::rc::Rc;
-use eframe::egui::{Align, Button, Layout, Color32, Label, RichText, ScrollArea, Stroke, TextEdit, TextStyle, Direction}
+use eframe::egui::{Align, Button, Layout, Color32, Label, RichText, ScrollArea, Stroke, TextEdit, TextStyle}
 ;
 use eframe::epaint::Vec2;
 

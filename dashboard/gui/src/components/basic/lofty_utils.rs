@@ -2,11 +2,8 @@ use std::path::Path;
 
 use std::collections::HashMap;
 use lofty::file::AudioFile;
-use lofty::file::TaggedFile;
 use lofty::file::TaggedFileExt;
 use lofty::probe::Probe;
-use lofty::tag::Tag;
-use lofty::tag::Accessor;
 use crate::components::basic::string_utils::*;
 
 pub fn get_audio_tags(file: &Path) -> HashMap<String, String> {

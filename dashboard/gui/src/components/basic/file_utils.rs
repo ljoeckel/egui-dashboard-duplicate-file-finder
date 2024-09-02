@@ -2,10 +2,28 @@ use std::{
     path::Path,
     fs::File,
     io::Read,
-    fmt::Pointer,
 };
+use std::io::BufReader;
 use anyhow::Result;
 
+const BUF_SIZE: usize = 256;
+
+/// Reads the first BUF_SIZE bytes from a file and creates an isize checksum.
+///
+/// Returns the isize checksum
+pub fn get_header_checksum(path: &Path) -> Result<isize> {
+    let f = File::open(path)?;
+    let mut reader = BufReader::new(f);
+    let mut buffer = [0u8; BUF_SIZE];
+
+    let bytes_read = reader.read(&mut buffer)?;
+
+    let mut checksum: isize = 0;
+    for i in 0..bytes_read {
+        checksum += buffer[i] as isize * i as isize;
+    }
+    Ok(checksum)
+}
 
 pub fn get_extension(path: &str) -> String {
     let extension = match path.rfind('.') {

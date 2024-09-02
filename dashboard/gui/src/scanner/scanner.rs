@@ -6,21 +6,16 @@ use crate::components::basic::lofty_utils::*;
 use std::{
     collections::{HashMap, HashSet},
     fs::File,
-    io::{BufReader, Read, Write},
+    io::{Write},
     path::Path,
 };
-use std::fmt::Pointer;
-use std::time::Duration;
+//use std::fmt::Pointer;
+//use std::time::Duration;
 use walkdir::{DirEntry, WalkDir};
 use crate::components::basic::string_utils::normalize_option;
 
-const BUF_SIZE: usize = 256;
-
 
 const SCRIPT_NAME: &str = "./duplicates.log";
-
-fn human_duration(duration: Duration) {}
-
 
 pub fn scan(path: &Path, scan_type: ScanType, media_groups: Vec<MediaGroup>, messenger: Messenger) {
     if !path.is_dir() {
@@ -79,12 +74,10 @@ fn walk_dir(
         match entry.metadata() {
             Ok(metadata) => {
                 let file_info = FileInfo::new(entry.clone());
-                let path = file_info.path_to_string();
-                let extension = get_extension(&file_info.path_to_string());
-
+                let extension = get_extension(file_info.path_to_str());
                 // If unknown extension then log in error
                 if !media_groups.iter().any(|mg| mg.is_known_extension(&extension)) {
-                    messenger.push_errlog(format!("Unknown extension {}", path));
+                    messenger.push_errlog(format!("Unknown extension {}", file_info.path_to_str()));
                     continue;
                 }
                 // Known extension and selected?
@@ -92,9 +85,9 @@ fn walk_dir(
                     continue;
                 }
 
-                messenger.push_stdlog(format!("{}", file_info.path_to_string()));
+                messenger.push_stdlog(format!("{}", file_info.path_to_str()));
 
-                let mut key: String = String::new();
+                let key: String;
                 match scan_type {
                     ScanType::BINARY => {
                         key = file_info.get_key(metadata.len());
@@ -105,7 +98,7 @@ fn walk_dir(
                         let track_title = normalize_option(map.get("TrackTitle"));
 
                         if duration == 0 || track_title.is_empty() {
-                            messenger.push_errlog(format!("No Duration '{}' or TrackTitle '{}' for {}", duration, track_title, file_info.path_to_string()));
+                            messenger.push_errlog(format!("No Duration '{}' or TrackTitle '{}' for {}", duration, track_title, file_info.path_to_str()));
                             continue;
                         }
                         key = format!("{}{}", duration, track_title);
@@ -113,7 +106,6 @@ fn walk_dir(
                 } // match ScanType
 
                 // Add key to list
-                messenger.push_stdlog(format!("key: {}", &key));
                 let entries = fileinfo_map.entry(key).or_insert(Vec::new());
                 entries.push(file_info);
             } // (Ok) metadata
@@ -145,7 +137,7 @@ fn calc_checksum(map: &mut HashMap<String, Vec<FileInfo>>, messenger: &Messenger
 
         if item.len() > 1 {
             for fi in item.into_iter() {
-                fi.checksum = get_header_checksum(&fi.path_to_string());
+                fi.checksum = get_header_checksum(&fi.path()).unwrap_or(0);
             }
         }
     }
@@ -189,9 +181,13 @@ fn find_duplicates(scan_type: &ScanType, file_infos: &Vec<FileInfo>, messenger: 
             match scan_type {
                 ScanType::BINARY => {
                     // compare files with identical headers
+                    if file_info1.checksum == 0 || file_info2.checksum == 0 {
+                        messenger.push_errlog(format!("No checksum for file {}", file_info1.path_to_str()));
+                        continue;
+                    }
                     if file_info1.checksum - file_info2.checksum == 0 {
                         let checksum1 = compute_file_checksum(file_info1.path()).unwrap();
-                        let checksum2 = compute_file_checksum(file_info1.path()).unwrap();
+                        let checksum2 = compute_file_checksum(file_info2.path()).unwrap();
                         insert = checksum1 == checksum2;
                     }
                 }
@@ -203,8 +199,8 @@ fn find_duplicates(scan_type: &ScanType, file_infos: &Vec<FileInfo>, messenger: 
             };
 
             if insert {
-                duplicates.insert(file_info1.path_to_string());
-                duplicates.insert(file_info2.path_to_string());
+                duplicates.insert(file_info1.path_to_str().to_string());
+                duplicates.insert(file_info2.path_to_str().to_string());
             }
 
             if messenger.is_stopped() {
@@ -214,37 +210,6 @@ fn find_duplicates(scan_type: &ScanType, file_infos: &Vec<FileInfo>, messenger: 
     }
     duplicates
 }
-
-/// Reads the first BUF_SIZE bytes from a file and creates an isize checksum.
-///
-/// Returns the isize checksum
-fn get_header_checksum(path: &str) -> isize {
-    let f = match File::open(path) {
-        Ok(f) => f,
-        Err(e) => {
-            eprintln!("Error: {}, path={}", e, path);
-            return 0;
-        }
-    };
-
-    let mut reader = BufReader::new(f);
-    let mut buffer = [0u8; BUF_SIZE];
-
-    let bytes_read = match reader.read(&mut buffer) {
-        Ok(bytes_read) => bytes_read,
-        Err(e) => {
-            eprintln!("Error: {}, path={}", e, path);
-            return 0;
-        }
-    };
-
-    let mut checksum: isize = 0;
-    for i in 0..bytes_read {
-        checksum += buffer[i] as isize;
-    }
-    checksum
-}
-
 
 fn create_bash_script(
     duplicates: &Vec<String>,
@@ -267,6 +232,7 @@ struct FileInfo {
     dir_entry: DirEntry,
     checksum: isize,
 }
+
 impl FileInfo {
     pub fn new(dir_entry: DirEntry) -> FileInfo {
         FileInfo {
@@ -275,12 +241,8 @@ impl FileInfo {
         }
     }
 
-    /// Returns the String representation of file's path
-    pub fn path_to_string(&self) -> String {
-        match self.dir_entry.path().to_str() {
-            Some(s) => s.to_owned(),
-            None => String::new(),
-        }
+    pub fn path_to_str(&self) -> &str {
+        self.dir_entry.path().to_str().unwrap()
     }
 
     pub fn path(&self) -> &Path {
@@ -292,7 +254,7 @@ impl FileInfo {
     /// Key is build by combining the file length with the extension.
     /// If no extension is found, then only the file length will be used as key
     pub fn get_key(&self, length: u64) -> String {
-        let path = self.path_to_string();
+        let path = self.path_to_str();
         let key = match path.rfind('.') {
             Some(idx) => format!("{}{}", length, &path[idx..].to_uppercase()),
             None => format!("{}", length),
