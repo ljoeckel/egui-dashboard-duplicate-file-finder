@@ -254,18 +254,16 @@ pub fn duplicate_ui(
     let color = dss.get_tab_color(&ui);
 
     if ShowTab::from(dss.selected_tab) == ShowTab::Duplicates {
-        //ui.vertical(|vert| {
         duplicates_table::mediatable(ui, active_theme, &mut stack, checked, zoom_factor);
-        //}); // vert
     } else {
         scroll_area.show_rows(ui, row_height, stack.len(), |ui, row_range| {
             for row in row_range {
                 let msg = stack.get(row).unwrap();
                 let rt = RichText::new(msg).color(color);
                 ui.add(Label::new(rt).wrap_mode(TextWrapMode::Extend));
-                if is_scanning && !ctx.has_requested_repaint() {
-                    ctx.request_repaint();
-                }
+            }
+            if is_scanning && !ctx.has_requested_repaint() {
+                ctx.request_repaint();
             }
         });
     }
