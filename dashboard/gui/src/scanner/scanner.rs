@@ -9,11 +9,7 @@ use std::{
     io::{Write},
     path::Path,
 };
-//use std::fmt::Pointer;
-//use std::time::Duration;
 use walkdir::{DirEntry, WalkDir};
-use crate::components::basic::string_utils::normalize_option;
-
 
 const SCRIPT_NAME: &str = "./duplicates.log";
 
@@ -71,48 +67,41 @@ fn walk_dir(
             break;
         }
 
-        match entry.metadata() {
-            Ok(metadata) => {
-                let file_info = FileInfo::new(entry.clone());
-                let extension = get_extension(file_info.path_to_str());
-                // If unknown extension then log in error
-                if !media_groups.iter().any(|mg| mg.is_known_extension(&extension)) {
-                    messenger.push_errlog(format!("Unknown extension {}", file_info.path_to_str()));
-                    continue;
+        if entry.metadata().is_err() {
+            messenger.push_errlog(format!("Error={:?}", entry.metadata().err()));
+            continue;
+        }
+
+        let metadata = entry.metadata().ok().unwrap();
+        let file_info = FileInfo::new(entry.clone());
+        let extension = get_extension(file_info.path_to_str());
+
+        // If unknown extension then log in error
+        if !media_groups.iter().any(|mg| (mg.is_known_extension(&extension) && mg.is_selected(&extension)) ) {
+            messenger.push_errlog(format!("Extension {} ignored: {}", &extension, file_info.path_to_str()));
+            continue;
+        }
+
+        let key: String;
+        match scan_type {
+            ScanType::BINARY => {
+                key = file_info.get_key(metadata.len());
+            } // binary
+            ScanType::METADATA => {
+                key = match get_short_audio_key(&file_info.path()) {
+                    Ok(key) => key,
+                    Err(e) => {
+                        messenger.push_errlog(format!("{:?} : file: {:?}", e.to_string(), file_info.path()));
+                        continue
+                    }
                 }
-                // Known extension and selected?
-                if !media_groups.iter().any(|mg| mg.is_selected(&extension)) {
-                    continue;
-                }
+            } // metadata
+        } // match ScanType
 
-                messenger.push_stdlog(format!("{}", file_info.path_to_str()));
-
-                let key: String;
-                match scan_type {
-                    ScanType::BINARY => {
-                        key = file_info.get_key(metadata.len());
-                    } // binary
-                    ScanType::METADATA => {
-                        let map = get_audio_tags(&file_info.path());
-                        let duration: usize = map.get("Duration").unwrap_or(&"0".to_string()).parse().unwrap();
-                        let track_title = normalize_option(map.get("TrackTitle"));
-
-                        if duration == 0 || track_title.is_empty() {
-                            messenger.push_errlog(format!("No Duration '{}' or TrackTitle '{}' for {}", duration, track_title, file_info.path_to_str()));
-                            continue;
-                        }
-                        key = format!("{}{}", duration, track_title);
-                    } // metadata
-                } // match ScanType
-
-                // Add key to list
-                let entries = fileinfo_map.entry(key).or_insert(Vec::new());
-                entries.push(file_info);
-            } // (Ok) metadata
-            Err(e) => {
-                messenger.push_errlog(format!("Error={}", e));
-            }
-        };
+        // Add key to list
+        messenger.push_stdlog(format!("{} : {}", key, file_info.path_to_str()));
+        let entries = fileinfo_map.entry(key).or_insert(Vec::new());
+        entries.push(file_info);
     }
 
     // Retain only duplicate elements
@@ -137,7 +126,10 @@ fn calc_checksum(map: &mut HashMap<String, Vec<FileInfo>>, messenger: &Messenger
 
         if item.len() > 1 {
             for fi in item.into_iter() {
-                fi.checksum = get_header_checksum(&fi.path()).unwrap_or(0);
+                match get_header_checksum(&fi.path()) {
+                    Ok(checksum) => fi.checksum = checksum,
+                    Err(e) => messenger.push_errlog(format!("Error getting checksum for file {:?} : {:?}", &fi.path(), e.to_string()))
+                }
             }
         }
     }
@@ -185,22 +177,40 @@ fn find_duplicates(scan_type: &ScanType, file_infos: &Vec<FileInfo>, messenger: 
                         messenger.push_errlog(format!("No checksum for file {}", file_info1.path_to_str()));
                         continue;
                     }
+                    // Botch checksums are equal
                     if file_info1.checksum - file_info2.checksum == 0 {
-                        let checksum1 = compute_file_checksum(file_info1.path()).unwrap();
-                        let checksum2 = compute_file_checksum(file_info2.path()).unwrap();
-                        insert = checksum1 == checksum2;
+                        let get_checksum = |path: &Path, messenger: &Messenger| -> String {
+                            match compute_file_checksum(path) {
+                                Ok(checksum) => checksum,
+                                Err(e) => {
+                                    messenger.push_errlog(format!("Error for file {:?} : {:?}", path, e.to_string()));
+                                    String::new()
+                                }
+                            }
+                        };
+                        insert = get_checksum(file_info1.path(), &messenger) == get_checksum(file_info2.path(), &messenger);
                     }
                 }
                 ScanType::METADATA => {
-                    let key1 = get_audio_key(&get_audio_tags(file_info1.path()));
-                    let key2 = get_audio_key(&get_audio_tags(file_info2.path()));
+                    let unwrap = |path: &Path| -> String {
+                        match get_audio_key(path) {
+                            Ok(key) => key,
+                            Err(e) => {
+                                messenger.push_errlog(format!("Error Could not get Key file {:?} : {:?}", file_info1.path(), e.to_string()));
+                                String::new()
+                            }
+                        }
+                    };
+
+                    let key1 = unwrap(file_info1.path());
+                    let key2 = unwrap(file_info2.path());
                     insert = key1 == key2;
                 }
             };
 
             if insert {
-                duplicates.insert(file_info1.path_to_str().to_string());
-                duplicates.insert(file_info2.path_to_str().to_string());
+                duplicates.insert(file_info1.path_to_string());
+                duplicates.insert(file_info2.path_to_string());
             }
 
             if messenger.is_stopped() {
@@ -243,6 +253,10 @@ impl FileInfo {
 
     pub fn path_to_str(&self) -> &str {
         self.dir_entry.path().to_str().unwrap()
+    }
+
+    pub fn path_to_string(&self) -> String {
+        format!("{:?}", self.dir_entry.path())
     }
 
     pub fn path(&self) -> &Path {

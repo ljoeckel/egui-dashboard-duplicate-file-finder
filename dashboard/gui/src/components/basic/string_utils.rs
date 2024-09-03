@@ -1,7 +1,7 @@
 const CHARS_TO_REMOVE: [char; 27] = ['\'', '\"', '/', '=', '-', ',', '.', ':', ';', '\n', '\t', '<', '>', '^', '`', '&', '%', '$', '£', '@', '#', '!', '?', '§', '°', '*', '+'];
 
 // Remove multiples of the given character i.e. '  ' -> ' ', Trims char at end
-pub fn trim_char(st: String, c: char) -> String {
+pub fn trim_char(st: &String, c: char) -> String {
     let mut cnt: usize = 0;
     let mut s = String::with_capacity(st.len() + 1);
 
@@ -17,10 +17,10 @@ pub fn trim_char(st: String, c: char) -> String {
         }
         s.push(chr);
     }
-    return s;
+    s
 }
 
-pub fn remove_klammer(st: String, c0: char, c1: char) -> String {
+pub fn remove_klammer(st: &String, c0: char, c1: char) -> String {
     let mut ignore: bool = false;
     let mut s = String::new();
     for c in st.chars() {
@@ -39,20 +39,20 @@ pub fn remove_klammer(st: String, c0: char, c1: char) -> String {
 
         s.push(c);
     }
-    return s;
+    s
 }
 
 pub fn normalize_string(value: &String) -> String {
     let mut str = value.to_lowercase();
-    str = remove_klammer(str, '(', ')'); // '(live)', ...
-    str = remove_klammer(str, '{', '}');
-    return trim_char(str, ' ');
+    str = remove_klammer(&str, '(', ')'); // '(live)', ...
+    str = remove_klammer(&str, '{', '}');
+    trim_char(&str, ' ')
 }
 
 pub fn normalize_option(value: Option<&String>) -> String {
     if value.is_none() {
-        return String::new();
+        String::new()
     } else {
-        return normalize_string(value.unwrap());
+        normalize_string(value.unwrap())
     }
 }
