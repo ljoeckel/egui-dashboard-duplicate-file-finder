@@ -93,20 +93,22 @@ impl DuplicateScannerUI {
         self.messenger.cntres() > 0 || self.messenger.cnterr() > 0 || self.messenger.cntstd() > 0
     }
 
-    fn get_tab_data(&self) -> (MutexGuard<Vec<String>>, MutexGuard<Vec<bool>>) {
-        let stack: MutexGuard<Vec<String>>;
+    fn get_tab_data(&self) -> MutexGuard<Vec<String>> {
         match ShowTab::from(self.selected_tab) {
             ShowTab::Scanned => {
-                stack = self.messenger.stdlog();
+                self.messenger.stdlog()
             }
             ShowTab::Duplicates => {
-                stack = self.messenger.reslog();
+                self.messenger.reslog()
             }
             ShowTab::Errors => {
-                stack = self.messenger.errlog();
+                self.messenger.errlog()
             }
         }
-        (stack, self.messenger.checked())
+    }
+
+    fn get_checked(&self) ->MutexGuard<Vec<bool>> {
+        self.messenger.checked()
     }
 
     fn get_tab_color(&self, ui: &Ui) -> Color32 {
@@ -250,11 +252,12 @@ pub fn duplicate_ui(
         .hscroll(true)
         .stick_to_bottom(true);
 
-    let (mut stack, checked) = dss.get_tab_data();
+    let mut stack= dss.get_tab_data();
+    let mut checked = dss.get_checked();
     let color = dss.get_tab_color(&ui);
 
     if ShowTab::from(dss.selected_tab) == ShowTab::Duplicates {
-        duplicates_table::mediatable(ui, active_theme, &mut stack, checked, zoom_factor);
+        duplicates_table::mediatable(ui, active_theme, &mut stack, &mut checked, zoom_factor);
     } else {
         scroll_area.show_rows(ui, row_height, stack.len(), |ui, row_range| {
             for row in row_range {

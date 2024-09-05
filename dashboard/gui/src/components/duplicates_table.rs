@@ -30,7 +30,7 @@ pub fn mediatable(
     ui: &mut egui::Ui,
     active_theme: &Rc<dyn Aesthetix>,
     duplicates: &mut MutexGuard<Vec<String>>,
-    mut checked: MutexGuard<Vec<bool>>,
+    checked: &mut MutexGuard<Vec<bool>>,
     zoom_factor: f32,
 )
 {
