@@ -28,9 +28,9 @@ fn chars_per_line(zoom_factor: f32, available_width: f32) -> usize {
 
 pub fn mediatable(
     ui: &mut egui::Ui,
-    active_theme: &Rc<dyn Aesthetix>,
     duplicates: &mut MutexGuard<Vec<String>>,
     checked: &mut MutexGuard<Vec<bool>>,
+    active_theme: &Rc<dyn Aesthetix>,
     zoom_factor: f32,
 )
 {

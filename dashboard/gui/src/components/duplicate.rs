@@ -254,11 +254,11 @@ pub fn duplicate_ui(
 
     let mut stack= dss.get_tab_data();
     let mut checked = dss.get_checked();
-    let color = dss.get_tab_color(&ui);
 
     if ShowTab::from(dss.selected_tab) == ShowTab::Duplicates {
-        duplicates_table::mediatable(ui, active_theme, &mut stack, &mut checked, zoom_factor);
+        duplicates_table::mediatable(ui, &mut stack, &mut checked, active_theme, zoom_factor);
     } else {
+        let color = dss.get_tab_color(&ui);
         scroll_area.show_rows(ui, row_height, stack.len(), |ui, row_range| {
             for row in row_range {
                 let msg = stack.get(row).unwrap();
