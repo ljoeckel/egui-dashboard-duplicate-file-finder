@@ -256,7 +256,7 @@ impl FileInfo {
     }
 
     pub fn path_to_string(&self) -> String {
-        format!("{:?}", self.dir_entry.path())
+        self.dir_entry.path().to_str().unwrap_or("").to_string()
     }
 
     pub fn path(&self) -> &Path {

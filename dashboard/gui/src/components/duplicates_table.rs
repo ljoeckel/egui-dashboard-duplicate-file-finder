@@ -5,6 +5,10 @@ use eframe::egui::scroll_area::ScrollBarVisibility;
 use egui_aesthetix::Aesthetix;
 use egui_extras::{Column, TableBuilder};
 use egui_modal::*;
+use std::path::Path;
+use std::collections::HashMap;
+use anyhow::Error;
+use crate::components::basic::lofty_utils::get_audio_tags;
 
 const CHARS_PER_LINE: [(f32, f32, f32);9] = [
     (0.7, 1216.0, 130.0),
@@ -142,6 +146,28 @@ pub fn mediatable(
                     let resp = ui.add(Label::new(RichText::new(utf.to_string()).color(fg_color)));
                     if len >= chars_per_line {
                         resp.on_hover_text(s);
+                    }
+                });
+
+                // Contextmenu on Row
+                row.response().on_hover_ui(|ui| {
+                    egui::CollapsingHeader::new("Metadata")
+                        .default_open(false)
+                        .show(ui, |ui| {
+                            ui.label(&duplicates[row_index]);
+                        });
+
+                    ui.label(&duplicates[row_index]);
+                    ui.separator();
+
+                    let path = Path::new(&duplicates[row_index]);
+                    let rmap: Result<HashMap<String, String>, Error> = get_audio_tags(path);
+                    if rmap.is_ok() {
+                        let map = rmap.unwrap();
+                        for k in map.keys() {
+                            println!("key: {}", k);
+                            println!("val: {}", map.get(k).unwrap());
+                        }
                     }
                 });
 
