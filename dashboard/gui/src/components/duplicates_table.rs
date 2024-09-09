@@ -123,6 +123,10 @@ pub fn mediatable(
                             if modal.button(ui, "DELETE").clicked() {
                                 delete_checked_duplicates(duplicates, checked);
                             };
+                            if modal.button(ui, "CANCEL").clicked() {
+                                // Do nothing
+                            };
+
                         });
                     });
                 }
