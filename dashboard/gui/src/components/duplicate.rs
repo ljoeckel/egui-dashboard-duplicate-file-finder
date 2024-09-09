@@ -10,8 +10,7 @@ use std::{
     vec::Vec,
 };
 use std::rc::Rc;
-use eframe::egui::{Align, Button, Layout, Color32, Label, RichText, ScrollArea, Stroke, TextEdit, TextStyle}
-;
+use eframe::egui::{Align, Button, Layout, Color32, Label, RichText, ScrollArea, Stroke, TextEdit, TextStyle};
 use eframe::epaint::Vec2;
 
 use eframe::egui;
@@ -19,7 +18,7 @@ use egui::scroll_area::ScrollBarVisibility;
 use egui::{epaint::text::TextWrapMode, Ui};
 
 use egui_aesthetix::Aesthetix;
-use egui_file_dialog::FileDialog;
+use egui_file_dialog::{FileDialog};
 
 use crate::components::notifications::NotificationBar;
 use crate::components::{duplicates_table};
@@ -93,21 +92,7 @@ impl DuplicateScannerUI {
         self.messenger.cntres() > 0 || self.messenger.cnterr() > 0 || self.messenger.cntstd() > 0
     }
 
-    fn get_tab_data(&self) -> MutexGuard<Vec<String>> {
-        match ShowTab::from(self.selected_tab) {
-            ShowTab::Scanned => {
-                self.messenger.stdlog()
-            }
-            ShowTab::Duplicates => {
-                self.messenger.reslog()
-            }
-            ShowTab::Errors => {
-                self.messenger.errlog()
-            }
-        }
-    }
-
-    fn get_checked(&self) ->MutexGuard<Vec<bool>> {
+    fn get_checked(&self) -> MutexGuard<Vec<bool>> {
         self.messenger.checked()
     }
 
@@ -151,8 +136,7 @@ pub fn duplicate_ui(
                     .desired_width(ui.available_width() - 50.0));
 
                 // Open Directory Symbol
-                if ui.add_enabled(!is_scanning,
-                                  egui::Button::new(" \u{e613} "))
+                if ui.add_enabled(!is_scanning, egui::Button::new(" \u{e613} "))
                     .clicked() {
                     dss.file_dialog.select_directory();
                 }
@@ -252,23 +236,35 @@ pub fn duplicate_ui(
         .hscroll(true)
         .stick_to_bottom(true);
 
-    let mut stack= dss.get_tab_data();
-    let mut checked = dss.get_checked();
-
     if ShowTab::from(dss.selected_tab) == ShowTab::Duplicates {
+        let mut stack = dss.messenger.reslog();
+        let mut checked = dss.get_checked();
         duplicates_table::mediatable(ui, &mut stack, &mut checked, active_theme, zoom_factor);
     } else {
         let color = dss.get_tab_color(&ui);
-        scroll_area.show_rows(ui, row_height, stack.len(), |ui, row_range| {
-            for row in row_range {
-                let msg = stack.get(row).unwrap();
-                let rt = RichText::new(msg).color(color);
-                ui.add(Label::new(rt).wrap_mode(TextWrapMode::Extend));
-            }
-            if is_scanning && !ctx.has_requested_repaint() {
-                ctx.request_repaint();
-            }
-        });
+
+        if ShowTab::from(dss.selected_tab) == ShowTab::Scanned {
+            let stack = dss.messenger.stdlog(); // TODO:
+            scroll_area.show_rows(ui, row_height, stack.len(), |ui, row_range| {
+                for row in row_range {
+                    let msg = stack.get(row).unwrap();
+                    let rt = RichText::new(msg).color(color);
+                    ui.add(Label::new(rt).wrap_mode(TextWrapMode::Extend));
+                }
+            });
+        } else if ShowTab::from(dss.selected_tab) == ShowTab::Errors {
+            let stack = dss.messenger.errlog(); //TODO:
+            scroll_area.show_rows(ui, row_height, stack.len(), |ui, row_range| {
+                for row in row_range {
+                    let msg = stack.get(row).unwrap();
+                    let rt = RichText::new(msg).color(color);
+                    ui.add(Label::new(rt).wrap_mode(TextWrapMode::Extend));
+                }
+            });
+        }
+        if is_scanning && !ctx.has_requested_repaint() {
+            ctx.request_repaint();
+        }
     }
 
     if !ctx.has_requested_repaint() {

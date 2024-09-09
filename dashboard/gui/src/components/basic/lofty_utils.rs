@@ -13,6 +13,8 @@ fn unwrap(s: Option<&String>) -> String {
 
 pub fn get_audio_tags(file: &Path) -> Result<HashMap<String, String>, Error> {
     let mut map: HashMap<String, String> = HashMap::new();
+    // Insert the file Path as PATH entry
+    map.insert("PATH".to_string(), file.to_str().unwrap().to_string());
 
     let probe = Probe::open(file)?;
     let tagged_file = probe.read()?;

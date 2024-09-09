@@ -4,7 +4,7 @@ use crate::components::basic::file_utils::*;
 use crate::components::basic::lofty_utils::*;
 
 use std::{
-    collections::{HashMap, HashSet},
+    collections::HashMap,
     fs::File,
     io::{Write},
     path::Path,
@@ -32,7 +32,7 @@ pub fn scan(path: &Path, scan_type: ScanType, media_groups: Vec<MediaGroup>, mes
     let duplicates = check_for_duplicates(&scan_type, &metas, &messenger);
 
     // 4. Print the duplicates to stdout
-    match create_bash_script(&duplicates, &messenger) {
+    match create_bash_script(&duplicates) {
         Ok(duplicates_written) => {
             if duplicates_written > 0 {
                 messenger.set_info(format!("{} duplicates written to file {}", duplicates_written, SCRIPT_NAME))
@@ -77,7 +77,7 @@ fn walk_dir(
         let extension = get_extension(file_info.path_to_str());
 
         // If unknown extension then log in error
-        if !media_groups.iter().any(|mg| (mg.is_known_extension(&extension) && mg.is_selected(&extension)) ) {
+        if !media_groups.iter().any(|mg| (mg.is_known_extension(&extension) && mg.is_selected(&extension))) {
             messenger.push_errlog(format!("Extension {} ignored: {}", &extension, file_info.path_to_str()));
             continue;
         }
@@ -92,7 +92,7 @@ fn walk_dir(
                     Ok(key) => key,
                     Err(e) => {
                         messenger.push_errlog(format!("{:?} : file: {:?}", e.to_string(), file_info.path()));
-                        continue
+                        continue;
                     }
                 }
             } // metadata
@@ -139,10 +139,10 @@ fn check_for_duplicates(
     scan_type: &ScanType,
     metas: &HashMap<String, Vec<FileInfo>>,
     messenger: &Messenger,
-) -> Vec<String> {
+) -> Vec<HashMap<String, String>> {
     let mut count = 0;
     let len = metas.len();
-    let mut duplicates: Vec<String> = Vec::new();
+    let mut duplicates: Vec<HashMap<String, String>> = Vec::new();
 
     for (key, file_infos) in metas.iter() {
         if messenger.is_stopped() {
@@ -161,8 +161,8 @@ fn check_for_duplicates(
     duplicates
 }
 
-fn find_duplicates(scan_type: &ScanType, file_infos: &Vec<FileInfo>, messenger: &Messenger) -> HashSet<String> {
-    let mut duplicates: HashSet<String> = HashSet::new();
+fn find_duplicates(scan_type: &ScanType, file_infos: &Vec<FileInfo>, messenger: &Messenger) -> Vec<HashMap<String, String>> {
+    let mut duplicates: Vec<HashMap<String, String>> = Vec::new();
 
     for i in 0..file_infos.len() - 1 {
         let file_info1 = &file_infos[i];
@@ -209,8 +209,8 @@ fn find_duplicates(scan_type: &ScanType, file_infos: &Vec<FileInfo>, messenger: 
             };
 
             if insert {
-                duplicates.insert(file_info1.path_to_string());
-                duplicates.insert(file_info2.path_to_string());
+                duplicates.push(get_audio_tags(file_info1.path()).unwrap());
+                duplicates.push(get_audio_tags(file_info2.path()).unwrap());
             }
 
             if messenger.is_stopped() {
@@ -222,19 +222,21 @@ fn find_duplicates(scan_type: &ScanType, file_infos: &Vec<FileInfo>, messenger: 
 }
 
 fn create_bash_script(
-    duplicates: &Vec<String>,
-    messenger: &Messenger,
+    duplicates: &Vec<HashMap<String, String>>,
 ) -> Result<usize, std::io::Error> {
-    if !messenger.is_stopped() {
-        let mut f = File::create(SCRIPT_NAME)?;
-        for path in duplicates.iter() {
-            f.write_all(path.as_bytes())?;
-            f.write_all(&[b'\n'])?;
+    let mut f = File::create(SCRIPT_NAME)?;
+    for item in duplicates {
+        writeln!(f, "{:?}", item.get("PATH").unwrap())?;
+
+        //TODO: Where is item.keys().sorted() function?
+        let mut vkeys = item.keys().cloned().collect::<Vec<_>>();
+        vkeys.sort();
+        for key in vkeys.iter() {
+            let val = item.get(key).unwrap();
+            writeln!(f, "\t\t{}: {}", key, val)?;
         }
-        Ok(duplicates.len())
-    } else {
-        Ok(0)
     }
+    Ok(duplicates.len())
 }
 
 #[derive(Debug)]
@@ -253,10 +255,6 @@ impl FileInfo {
 
     pub fn path_to_str(&self) -> &str {
         self.dir_entry.path().to_str().unwrap()
-    }
-
-    pub fn path_to_string(&self) -> String {
-        self.dir_entry.path().to_str().unwrap_or("").to_string()
     }
 
     pub fn path(&self) -> &Path {

@@ -1,13 +1,14 @@
 use crate::scanner::mediatype::Control;
 
 use std::sync::{Arc, Mutex, MutexGuard};
+use std::collections::HashMap;
 
 #[derive(Clone, Debug)]
 pub struct Messenger {
     scanner_control: Arc<Mutex<Control>>,
     stdlog: Arc<Mutex<Vec<String>>>,
     errlog: Arc<Mutex<Vec<String>>>,
-    reslog: Arc<Mutex<Vec<String>>>,
+    reslog: Arc<Mutex<Vec<HashMap<String, String>>>>,
     checked: Arc<Mutex<Vec<bool>>>,
     info: Arc<Mutex<String>>,
     progress: Arc<Mutex<f32>>,
@@ -70,13 +71,13 @@ impl Messenger {
         self.stdlog.lock().unwrap()
     }
 
-    pub fn push_reslog(&self, str: String) {
+    pub fn push_reslog(&self, map: HashMap<String, String>) {
         let _l = self.group_lock.lock();
-        self.reslog.lock().unwrap().push(str.clone());
+        self.reslog.lock().unwrap().push(map.clone());
         self.checked.lock().unwrap().push(false);
     }
 
-    pub fn reslog(&self) -> MutexGuard<Vec<String>> {
+    pub fn reslog(&self) -> MutexGuard<Vec<HashMap<String, String>>> {
         let _l = self.group_lock.lock();
         self.reslog.lock().unwrap()
     }
