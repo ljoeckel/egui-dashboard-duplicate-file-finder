@@ -86,3 +86,21 @@ pub fn get_audio_key(file: &Path) -> Result<String, Error> {
         Err(e) => Err(e)
     }
 }
+
+// Remove PATH and 'Unknown' tags
+pub fn filter_tags(map: &HashMap<String, String>, unknown: bool, musicbrainz: bool) -> Vec<&String> {
+    fn custom_filter(item: &String, unknown: bool, musicbrainz: bool) -> bool {
+        let mut flt: bool = true;
+        if item.to_uppercase().contains("PATH") {flt = false;}
+        if unknown {
+            if item.to_uppercase().contains("UNKNOWN") {flt = false;}
+        }
+        if musicbrainz {
+            if item.to_uppercase().contains("MUSICBRAINZ") {flt = false;}
+        }
+        flt
+    }
+    let mut filtered: Vec<&String> = map.keys().filter(|i| {custom_filter(i, unknown, musicbrainz)}).collect();
+    filtered.sort();
+    filtered
+}

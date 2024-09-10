@@ -158,11 +158,10 @@ impl eframe::App for Dashboard {
                         components::duplicate::duplicate_ui(
                             ui_central_panel,
                             context,
+                            &mut self.state,
                             &mut self.duplicate_scanner_state,
                             self.settings_state.media_groups.clone(),
                             &mut self.notification_bar,
-                            &self.state.active_theme,
-                            self.state.zoom_factor,
                         );
                     }
 

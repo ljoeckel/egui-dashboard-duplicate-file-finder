@@ -9,20 +9,18 @@ use std::{
     time::Duration,
     vec::Vec,
 };
-use std::rc::Rc;
 use eframe::egui::{Align, Button, Layout, Color32, Label, RichText, ScrollArea, Stroke, TextEdit, TextStyle};
 use eframe::epaint::Vec2;
 
 use eframe::egui;
 use egui::scroll_area::ScrollBarVisibility;
 use egui::{epaint::text::TextWrapMode, Ui};
-
-use egui_aesthetix::Aesthetix;
 use egui_file_dialog::{FileDialog};
 
 use crate::components::notifications::NotificationBar;
 use crate::components::{duplicates_table};
 use egui_comps::tabbar::TabBar;
+use crate::app::ApplicationState;
 
 const BUTTON_HEIGHT: f32 = 32.0;
 
@@ -110,11 +108,10 @@ impl DuplicateScannerUI {
 pub fn duplicate_ui(
     ui: &mut egui::Ui,
     ctx: &egui::Context,
+    state: &mut ApplicationState,
     dss: &mut DuplicateScannerUI,
     media_groups: Vec<MediaGroup>,
     notification_bar: &mut NotificationBar,
-    active_theme: &Rc<dyn Aesthetix>,
-    zoom_factor: f32,
 ) {
     let is_scanning = dss.is_scanning();
     let have_results = dss.have_results();
@@ -239,7 +236,7 @@ pub fn duplicate_ui(
     if ShowTab::from(dss.selected_tab) == ShowTab::Duplicates {
         let mut stack = dss.messenger.reslog();
         let mut checked = dss.get_checked();
-        duplicates_table::mediatable(ui, &mut stack, &mut checked, active_theme, zoom_factor);
+        duplicates_table::mediatable(ui, state, &mut stack, &mut checked);
     } else {
         let color = dss.get_tab_color(&ui);
 

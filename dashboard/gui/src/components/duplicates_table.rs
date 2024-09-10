@@ -1,12 +1,12 @@
-use std::rc::Rc;
 use std::sync::MutexGuard;
 use eframe::egui::{self, *};
 use eframe::egui::scroll_area::ScrollBarVisibility;
-use egui_aesthetix::Aesthetix;
 use egui_extras::{Column, TableBuilder};
 use egui_modal::*;
 use std::path::Path;
 use std::collections::HashMap;
+use crate::app::ApplicationState;
+use crate::components::basic::lofty_utils::filter_tags;
 
 const CHARS_PER_LINE: [(f32, f32, f32); 9] = [
     (0.7, 1216.0, 130.0),
@@ -58,17 +58,14 @@ fn delete_checked_duplicates(duplicates: &mut MutexGuard<Vec<HashMap<String, Str
 
         // Remove from duplicates/checked
         duplicates.remove(idx);
-        //&duplicates.remove(idx);
         checked.remove(idx);
     }
 }
 
-pub fn mediatable(
-    ui: &mut egui::Ui,
-    duplicates: &mut MutexGuard<Vec<HashMap<String, String>>>,
-    checked: &mut MutexGuard<Vec<bool>>,
-    active_theme: &Rc<dyn Aesthetix>,
-    zoom_factor: f32,
+pub fn mediatable(ui: &mut egui::Ui,
+                  state: &mut ApplicationState,
+                  duplicates: &mut MutexGuard<Vec<HashMap<String, String>>>,
+                  checked: &mut MutexGuard<Vec<bool>>,
 )
 {
     // Calculate Sizes
@@ -96,7 +93,7 @@ pub fn mediatable(
 
     // Create the Table
     TableBuilder::new(ui)
-        .striped(true)
+        .striped(false)
         .scroll_bar_visibility(ScrollBarVisibility::AlwaysVisible)
         .vscroll(true)
         .stick_to_bottom(true)
@@ -126,7 +123,6 @@ pub fn mediatable(
                             if modal.button(ui, "CANCEL").clicked() {
                                 // Do nothing
                             };
-
                         });
                     });
                 }
@@ -147,7 +143,7 @@ pub fn mediatable(
                     ui.checkbox(&mut checked[row_index], "");
                 });
                 row.col(|ui| {
-                    let chars_per_line = chars_per_line(zoom_factor, available_width);
+                    let chars_per_line = chars_per_line(state.zoom_factor, available_width);
                     // Show the nn right characters in the table
                     let map = &duplicates[row_index];
                     let s = map.get("PATH").unwrap();
@@ -162,9 +158,9 @@ pub fn mediatable(
                     // Change text color when selected
                     let fg_color: Color32;
                     if checked[row_index] {
-                        fg_color = active_theme.fg_error_text_color_visuals();
+                        fg_color = state.active_theme.fg_error_text_color_visuals();
                     } else {
-                        fg_color = active_theme.fg_primary_text_color_visuals().unwrap();
+                        fg_color = state.active_theme.fg_primary_text_color_visuals().unwrap();
                     }
 
                     // Create a tooltip when line longer than visible part
@@ -187,29 +183,22 @@ pub fn mediatable(
                         .font(FontId::proportional(15.0)));
                     ui.separator();
 
-                    ui.label(RichText::new(map.get("AlbumArtist").unwrap_or(&"".to_string()))
-                        .color(Color32::DARK_BLUE)
-                        .background_color(Color32::from_rgba_premultiplied(0, 8, 32, 16)));
-                    ui.label(RichText::new(map.get("AlbumTitle").unwrap_or(&"".to_string()))
-                        .text_style(TextStyle::Small)
-                        .color(Color32::DARK_BLUE)
-                        .background_color(Color32::from_rgba_premultiplied(0, 8, 32, 16)));
-                    ui.label(RichText::new(map.get("TrackTitle").unwrap_or(&"".to_string()))
-                        .color(Color32::DARK_BLUE)
-                        .background_color(Color32::from_rgba_premultiplied(0, 8, 32, 16)));
+                    ui.horizontal(|ui| {
+                        ui.label("Filter: ");
+                        ui.checkbox(&mut state.filter_unknown, "Unknown");
+                        ui.checkbox(&mut state.filter_musicbrainz, "MusicBrainz");
+                    });
 
                     egui::ScrollArea::vertical()
-                        .enable_scrolling(true)
-                        .scroll_bar_visibility(ScrollBarVisibility::AlwaysVisible)
-                        .enable_scrolling(true)
+                        .auto_shrink(false)
                         .drag_to_scroll(true)
                         .show(ui, |ui| {
                             egui::Grid::new("duplicates_table_grid")
+                                .striped(false)
                                 .num_columns(2)
                                 .show(ui, |ui| {
-                                    let mut vkeys = map.keys().cloned().collect::<Vec<_>>();
-                                    vkeys.sort();
-                                    for key in vkeys.iter() {
+                                    let filtered = filter_tags(map, state.filter_unknown, state.filter_musicbrainz);
+                                    for key in filtered {
                                         ui.label(key);
                                         ui.label(map.get(key).unwrap());
                                         ui.end_row();

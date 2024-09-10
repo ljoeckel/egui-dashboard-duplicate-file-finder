@@ -30,6 +30,10 @@ pub struct ApplicationState {
     pub inspector_window_open: bool,
     pub memory_window_open: bool,
     pub zoom_factor: f32,
+
+    // Filter in duplicates_table.rs
+    pub filter_unknown: bool,
+    pub filter_musicbrainz: bool,
 }
 
 impl ApplicationState {
@@ -43,6 +47,10 @@ impl ApplicationState {
             inspector_window_open: false,
             memory_window_open: false,
             zoom_factor: 1.0,
+
+            filter_unknown: true,
+            filter_musicbrainz: true,
+
         }
     }
 }
